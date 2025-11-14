@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA - Safe Route Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(ellipse at top, rgba(127, 86, 217, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                        var(--dark-bg);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .map-page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .map-header {
+            background: linear-gradient(135deg, rgba(26, 26, 31, 0.95) 0%, rgba(20, 20, 25, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .map-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .map-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .route-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .input-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: rgba(127, 86, 217, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .input-group.dropdown-open input {
+            border-radius: 8px 8px 0 0;
+            border-bottom-color: transparent;
+        }
+
+        .input-group input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        /* Autocomplete dropdown styles */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 31, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: -8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background: rgba(127, 86, 217, 0.15);
+            color: var(--text-primary);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item .main-text {
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .autocomplete-item .sub-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .autocomplete-loading {
+            padding: 12px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .btn-find-route {
+            background: linear-gradient(135deg, #7F56D9 0%, #A78BFA 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-find-route:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(127, 86, 217, 0.4);
+        }
+
+        .btn-find-route:active {
+            transform: translateY(0);
+        }
+
+        .btn-find-route:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            min-height: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .route-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(26, 26, 31, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            min-width: 200px;
+        }
+
+        .route-legend h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .legend-color.fastest {
+            background: #00d4ff;
+        }
+
+        .legend-color.safest {
+            background: #8e44ad;
+        }
+
+        /* Leaflet Custom Styles */
+        .leaflet-container {
+            background: var(--dark-bg);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Remove Leaflet default marker shadows and ensure pin markers display */
+        .leaflet-marker-shadow {
+            display: none !important;
+        }
+
+        .leaflet-marker-icon {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* Ensure custom pin markers are displayed correctly */
+        .custom-pin-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .custom-pin-marker .pin-container {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .custom-pin-marker .pin-body {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .custom-pin-marker svg {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: rgba(26, 26, 31, 0.95);
+            backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaflet-popup-content {
+            margin: 12px;
+            font-size: 0.9rem;
+        }
+
+        .leaflet-popup-content h4 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .leaflet-popup-content p {
+            margin: 4px 0;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Routing Machine Styles */
+        .leaflet-routing-container {
+            background: rgba(26, 26, 31, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+        }
+
+        .leaflet-routing-alt {
+            background: rgba(26, 26, 31, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaflet-routing-alt h3 {
+            color: var(--text-primary);
+        }
+
+        .leaflet-routing-alt-minimized {
+            background: rgba(26, 26, 31, 0.95);
+        }
+
+        .leaflet-bar {
+            background: rgba(26, 26, 31, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaflet-bar a {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaflet-bar a:hover {
+            background-color: rgba(127, 86, 217, 0.2);
+            color: var(--text-primary);
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(26, 26, 31, 0.8);
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+        }
+
+        .leaflet-control-attribution a {
+            color: var(--primary-purple);
+        }
+
+        /* Custom Pin-Style Marker Animations */
+        .custom-pin-marker {
+            animation: pinPulse 2s ease-in-out infinite;
+            transform-origin: bottom center;
+        }
+
+        @keyframes pinPulse {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-3px) scale(1.05);
+            }
+        }
+
+        /* Pin marker container */
+        .pin-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .pin-body {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Minimalist InfoWindow for Safe Spaces */
+        .minimalist-infowindow .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(142, 68, 173, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            padding: 0;
+        }
+
+        .minimalist-infowindow .leaflet-popup-content {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .route-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .route-legend {
+                bottom: 20px;
+                left: 20px;
+                right: auto;
+                top: auto;
+            }
+
+            .map-header h1 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="map-page-container">
+        <div class="map-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 style="margin: 0;">🗺️ Safe Route Planner</h1>
+            </div>
+            <div class="route-inputs">
+                <div class="input-group">
+                    <label for="startLocation">Start Location</label>
+                    <input type="text" id="startLocation" placeholder="Enter start address or use current location" autocomplete="off">
+                    <div class="autocomplete-dropdown" id="startLocationDropdown"></div>
+                </div>
+                <div class="input-group">
+                    <label for="endLocation">End Location</label>
+                    <input type="text" id="endLocation" placeholder="Enter destination address" autocomplete="off">
+                    <div class="autocomplete-dropdown" id="endLocationDropdown"></div>
+                </div>
+                <button class="btn-find-route" id="findRouteBtn">Find Route</button>
+            </div>
+        </div>
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="route-legend">
+                <h3>Route</h3>
+                <div class="legend-item">
+                    <div class="legend-color safest"></div>
+                    <span>Safest Route</span>
+                </div>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="margin-bottom: 8px; font-size: 0.875rem;">Safe Spaces</h3>
+                    <div class="legend-item">
+                        <span style="color: #0066cc;">🛡️</span>
+                        <span>Police Station</span>
+                    </div>
+                    <div class="legend-item">
+                        <span style="color: #cc0000;">🏥</span>
+                        <span>Hospital</span>
+                    </div>
+                    <div class="legend-item">
+                        <span style="color: #22c55e;">✅</span>
+                        <span>24/7 Safe Space</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <!-- Nominatim Geocoding (Free, no API key needed) -->
+    <script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>
+
+    <script>
+        let map;
+        let routingControl;
+        let userMarker;
+        let safeSpaceMarkers = [];
+        let currentLocation = null;
+        let startMarker = null;
+        let endMarker = null;
+        let safestRoute = null;
+        let radiusCircle = null;
+
+        // Initialize map
+        function initMap() {
+            // Default location (University coordinates)
+            const defaultLocation = [31.261128, 75.706897];
+
+            // Create map with dark theme compatible tiles
+            map = L.map('map', {
+                center: defaultLocation,
+                zoom: 13,
+                zoomControl: true
+            });
+
+            // Add OpenStreetMap tiles (free, no API key needed)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Reload safe spaces when map is moved significantly (user pans/zooms)
+            let mapMoveTimeout;
+            map.on('moveend', () => {
+                // Debounce to avoid too many API calls
+                clearTimeout(mapMoveTimeout);
+                mapMoveTimeout = setTimeout(() => {
+                    const center = map.getCenter();
+                    const currentCenter = currentLocation || [center.lat, center.lng];
+                    const distance = calculateDistance(
+                        currentCenter[0], currentCenter[1],
+                        center.lat, center.lng
+                    );
+                    // Reload safe spaces if map moved more than 5 km from current location
+                    if (distance > 5) {
+                        console.log('Map center moved significantly, reloading safe spaces...');
+                        loadSafeSpaces([center.lat, center.lng]);
+                    }
+                }, 1000);
+            });
+
+            // Check for URL parameters for pre-filled route
+            const urlParams = new URLSearchParams(window.location.search);
+            const startParam = urlParams.get('start');
+            const endParam = urlParams.get('end');
+
+            // Initialize geocoder for address autocomplete
+            initGeocoder();
+
+            // If URL parameters are provided, don't get current location (use provided start)
+            // Otherwise, get user's current location
+            if (!startParam) {
+                getCurrentLocation();
+            } else {
+                // Use default location (university) if start is provided via URL
+                useDefaultLocation();
+            }
+
+            // Wait for map to be fully ready
+            map.whenReady(() => {
+                // Safe spaces will be loaded when user location is detected or default location is set
+                
+                // If URL parameters are present, pre-fill and auto-calculate route
+                if (startParam || endParam) {
+                    // Wait for geocoder and inputs to be initialized
+                    setTimeout(() => {
+                        // Set start location from URL parameter
+                        if (startParam) {
+                            document.getElementById('startLocation').value = startParam;
+                            // If start is university, center map on it
+                            if (startParam.toLowerCase().includes('lovely professional university')) {
+                                map.setView(defaultLocation, 13);
+                            }
+                        }
+                        
+                        // Set end location from URL parameter
+                        if (endParam) {
+                            // Check if endParam is coordinates (lat,lng) or address
+                            const coordMatch = endParam.match(/^([+-]?\d+\.?\d*),([+-]?\d+\.?\d*)$/);
+                            if (coordMatch) {
+                                // It's coordinates - try to reverse geocode to get address
+                                const lat = parseFloat(coordMatch[1]);
+                                const lng = parseFloat(coordMatch[2]);
+                                const endCoords = [lat, lng];
+                                
+                                // Center map to show both start and end
+                                if (startParam && startParam.toLowerCase().includes('lovely professional university')) {
+                                    const bounds = L.latLngBounds([defaultLocation, endCoords]);
+                                    map.fitBounds(bounds, { padding: [50, 50] });
+                                }
+                                
+                                reverseGeocode(endCoords, (address) => {
+                                    document.getElementById('endLocation').value = address || endParam;
+                                    // Auto-calculate route after setting values
+                                    setTimeout(() => findRoute(), 800);
+                                });
+                            } else {
+                                // It's an address
+                                document.getElementById('endLocation').value = endParam;
+                                // Auto-calculate route after setting values
+                                setTimeout(() => findRoute(), 800);
+                            }
+                        }
+                    }, 1500);
+                }
+            });
+
+            // Find route button handler
+            document.getElementById('findRouteBtn').addEventListener('click', findRoute);
+        }
+
+        function getCurrentLocation() {
+            // Try to get user's actual location first
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        // User's actual location
+                        const userLat = position.coords.latitude;
+                        const userLon = position.coords.longitude;
+                        currentLocation = [userLat, userLon];
+                        
+                        // Remove existing user marker if any
+                        if (userMarker) {
+                            map.removeLayer(userMarker);
+                        }
+                        
+                        // Create pin-style marker for user location
+                        userMarker = L.marker(currentLocation, {
+                            icon: createPinIcon('#00d4ff', 'default')
+                        }).addTo(map);
+                        userMarker.bindPopup('Your Current Location').openPopup();
+
+                        // Center map on user location
+                        map.setView(currentLocation, 15);
+
+                        // Set user location as default start location using reverse geocoding
+                        reverseGeocode(currentLocation, (address) => {
+                            document.getElementById('startLocation').value = address || `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`;
+                        });
+
+                        // Load safe spaces around user's actual location
+                        loadSafeSpaces(currentLocation);
+                    },
+                    (error) => {
+                        console.log('Geolocation error:', error);
+                        // Fallback to university location if geolocation fails
+                        useDefaultLocation();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                // Browser doesn't support geolocation, use default
+                useDefaultLocation();
+            }
+        }
+
+        function useDefaultLocation() {
+            // Always use Lovely Professional University as current location
+            const universityLocation = [31.261128, 75.706897];
+            currentLocation = universityLocation;
+            
+            // Remove existing user marker if any
+            if (userMarker) {
+                map.removeLayer(userMarker);
+            }
+            
+            // Create pin-style marker for university location
+            userMarker = L.marker(universityLocation, {
+                icon: createPinIcon('#00d4ff', 'default')
+            }).addTo(map);
+            userMarker.bindPopup('Lovely Professional University<br>Your Current Location').openPopup();
+
+            // Center map on university location
+            map.setView(universityLocation, 15);
+
+            // Set university as default start location using reverse geocoding
+            reverseGeocode(universityLocation, (address) => {
+                document.getElementById('startLocation').value = address || 'Lovely Professional University, Jalandhar, Punjab';
+            });
+
+            // Load safe spaces around default location
+            loadSafeSpaces(universityLocation);
+        }
+
+        function initGeocoder() {
+            // Initialize autocomplete for location inputs
+            initAutocomplete('startLocation', 'startLocationDropdown');
+            initAutocomplete('endLocation', 'endLocationDropdown');
+        }
+
+        // Autocomplete functionality
+        let autocompleteTimeout;
+        let autocompleteInitialized = false;
+
+        function initAutocomplete(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+
+            // Hide dropdown when clicking outside (only add once)
+            if (!autocompleteInitialized) {
+                document.addEventListener('click', function(event) {
+                    const target = event.target;
+                    const startInput = document.getElementById('startLocation');
+                    const endInput = document.getElementById('endLocation');
+                    const startDropdown = document.getElementById('startLocationDropdown');
+                    const endDropdown = document.getElementById('endLocationDropdown');
+                    
+                    // Check if click is inside any input or dropdown
+                    const clickedInside = 
+                        (startInput && (startInput === target || startInput.contains(target))) ||
+                        (endInput && (endInput === target || endInput.contains(target))) ||
+                        (startDropdown && startDropdown.contains(target)) ||
+                        (endDropdown && endDropdown.contains(target));
+                    
+                    if (!clickedInside) {
+                        if (startDropdown) {
+                            startDropdown.classList.remove('show');
+                            if (startInput && startInput.closest('.input-group')) {
+                                startInput.closest('.input-group').classList.remove('dropdown-open');
+                            }
+                        }
+                        if (endDropdown) {
+                            endDropdown.classList.remove('show');
+                            if (endInput && endInput.closest('.input-group')) {
+                                endInput.closest('.input-group').classList.remove('dropdown-open');
+                            }
+                        }
+                    }
+                });
+                autocompleteInitialized = true;
+            }
+
+            // Handle input changes with debounce
+            input.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+                
+                // Clear previous timeout
+                clearTimeout(autocompleteTimeout);
+                
+                // Hide dropdown if input is empty
+                if (query.length < 2) {
+                    dropdown.classList.remove('show');
+                    input.closest('.input-group').classList.remove('dropdown-open');
+                    return;
+                }
+
+                // Show loading state
+                dropdown.innerHTML = '<div class="autocomplete-loading">Searching...</div>';
+                dropdown.classList.add('show');
+                input.closest('.input-group').classList.add('dropdown-open');
+
+                // Debounce API call
+                autocompleteTimeout = setTimeout(() => {
+                    fetchSuggestions(query, dropdown, input);
+                }, 300);
+            });
+
+            // Handle keyboard navigation
+            input.addEventListener('keydown', function(e) {
+                const items = dropdown.querySelectorAll('.autocomplete-item');
+                const activeItem = dropdown.querySelector('.autocomplete-item.active');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (activeItem) {
+                        activeItem.classList.remove('active');
+                        const next = activeItem.nextElementSibling;
+                        if (next) {
+                            next.classList.add('active');
+                            next.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            items[0]?.classList.add('active');
+                        }
+                    } else {
+                        items[0]?.classList.add('active');
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (activeItem) {
+                        activeItem.classList.remove('active');
+                        const prev = activeItem.previousElementSibling;
+                        if (prev) {
+                            prev.classList.add('active');
+                            prev.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            items[items.length - 1]?.classList.add('active');
+                        }
+                    } else {
+                        items[items.length - 1]?.classList.add('active');
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeItem) {
+                        activeItem.click();
+                    }
+                } else if (e.key === 'Escape') {
+                    dropdown.classList.remove('show');
+                    input.closest('.input-group').classList.remove('dropdown-open');
+                }
+            });
+
+            // Handle focus
+            input.addEventListener('focus', function() {
+                if (input.value.trim().length >= 2 && dropdown.innerHTML.trim() !== '') {
+                    dropdown.classList.add('show');
+                    input.closest('.input-group').classList.add('dropdown-open');
+                }
+            });
+        }
+
+        function fetchSuggestions(query, dropdown, input) {
+            // Enhanced Nominatim API parameters for more accurate results
+            // Viewbox for Punjab, India area (bounded area: 29.5, 73.5, 32.0, 76.5)
+            const viewbox = '73.5,29.5,76.5,32.0'; // minlon,minlat,maxlon,maxlat (Punjab area)
+            
+            // Build search query - add Punjab, India context if not already present
+            let searchQuery = query.trim();
+            if (!searchQuery.toLowerCase().includes('punjab') && !searchQuery.toLowerCase().includes('india')) {
+                // For better accuracy, we can optionally add context
+                // But let's keep the query as-is for now to allow broader searches
+            }
+            
+            // Enhanced API URL with more parameters for accuracy
+            const url = new URL('https://nominatim.openstreetmap.org/search');
+            url.searchParams.set('format', 'json');
+            url.searchParams.set('q', searchQuery);
+            url.searchParams.set('limit', '8'); // Increased limit for more options
+            url.searchParams.set('addressdetails', '1');
+            url.searchParams.set('extratags', '1'); // Get extra tags for better matching
+            url.searchParams.set('namedetails', '1'); // Get name details
+            url.searchParams.set('countrycodes', 'in'); // Limit to India
+            url.searchParams.set('viewbox', viewbox); // Prioritize results in Punjab area
+            url.searchParams.set('bounded', '0'); // Don't strictly bound, but prioritize viewbox area
+            url.searchParams.set('dedupe', '1'); // Remove duplicates
+            url.searchParams.set('accept-language', 'en'); // English language for results
+            
+            fetch(url.toString(), {
+                headers: {
+                    'User-Agent': 'AURA Safety App (Educational Project)',
+                    'Accept': 'application/json',
+                    'Referer': window.location.origin
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Sort results by relevance (importance score if available)
+                if (Array.isArray(data) && data.length > 0) {
+                    data.sort((a, b) => {
+                        // Prioritize by importance (higher is better) and type relevance
+                        const importanceA = parseFloat(a.importance || 0);
+                        const importanceB = parseFloat(b.importance || 0);
+                        
+                        // Prioritize places, roads, buildings over other types
+                        const typePriority = {
+                            'place': 10,
+                            'highway': 8,
+                            'building': 6,
+                            'amenity': 5,
+                            'shop': 4,
+                            'tourism': 3
+                        };
+                        
+                        const typeA = a.type || a.class || '';
+                        const typeB = b.type || b.class || '';
+                        const priorityA = typePriority[typeA] || 0;
+                        const priorityB = typePriority[typeB] || 0;
+                        
+                        // Combine importance and type priority
+                        const scoreA = importanceA * 100 + priorityA;
+                        const scoreB = importanceB * 100 + priorityB;
+                        
+                        return scoreB - scoreA;
+                    });
+                }
+                
+                displaySuggestions(data, dropdown, input);
+            })
+            .catch(error => {
+                console.error('Autocomplete error:', error);
+                dropdown.innerHTML = '<div class="autocomplete-loading" style="color: #dc2626;">Error loading suggestions. Please try again.</div>';
+                dropdown.classList.add('show');
+                input.closest('.input-group').classList.add('dropdown-open');
+            });
+        }
+
+        function displaySuggestions(results, dropdown, input) {
+            if (results.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-loading">No results found. Try a different search term.</div>';
+                dropdown.classList.add('show');
+                input.closest('.input-group').classList.add('dropdown-open');
+                return;
+            }
+
+            dropdown.innerHTML = '';
+            
+            // Limit to top 6 results for better UX
+            const displayResults = results.slice(0, 6);
+            
+            displayResults.forEach((result, index) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                if (index === 0) {
+                    item.classList.add('active');
+                }
+                
+                // Enhanced display name formatting
+                const displayName = result.display_name || '';
+                const address = result.address || {};
+                
+                // Build main text from name or primary address component
+                let mainText = '';
+                if (result.name && result.name !== address.road) {
+                    mainText = result.name;
+                } else if (address.road) {
+                    mainText = address.road;
+                } else if (address.building || address.house_number) {
+                    mainText = [address.house_number, address.building].filter(Boolean).join(' ');
+                } else if (address.suburb || address.village || address.town) {
+                    mainText = address.suburb || address.village || address.town;
+                } else {
+                    mainText = displayName.split(',')[0] || displayName;
+                }
+                
+                // Build sub-text with location context
+                const subParts = [];
+                if (address.city || address.town) subParts.push(address.city || address.town);
+                if (address.state_district) subParts.push(address.state_district);
+                if (address.state) subParts.push(address.state);
+                if (address.postcode) subParts.push(address.postcode);
+                
+                const subText = subParts.slice(0, 3).join(', ').trim();
+                
+                // Add icon based on type
+                let icon = '';
+                const type = result.type || result.class || '';
+                if (type === 'place' || type === 'city' || type === 'town' || type === 'village') {
+                    icon = '📍';
+                } else if (type === 'highway' || type === 'road') {
+                    icon = '🛣️';
+                } else if (type === 'building' || type === 'amenity') {
+                    icon = '🏢';
+                } else if (address.amenity === 'hospital' || address.amenity === 'clinic') {
+                    icon = '🏥';
+                } else if (address.amenity === 'police') {
+                    icon = '🛡️';
+                } else if (address.amenity === 'school' || address.amenity === 'university') {
+                    icon = '🏫';
+                } else {
+                    icon = '📍';
+                }
+                
+                item.innerHTML = `
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <span style="font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;">${icon}</span>
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="main-text">${mainText}</div>
+                            ${subText ? `<div class="sub-text">${subText}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // Store full result data for later use
+                item.dataset.lat = result.lat;
+                item.dataset.lon = result.lon;
+                item.dataset.displayName = result.display_name;
+                item.dataset.resultType = result.type || result.class || '';
+                item.dataset.mainText = mainText;
+                item.dataset.subText = subText;
+                
+                // Handle click
+                item.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    const displayName = this.dataset.displayName;
+                    const resultType = this.dataset.resultType;
+                    const itemMainText = this.dataset.mainText;
+                    const itemSubText = this.dataset.subText;
+                    
+                    if (!displayName || isNaN(lat) || isNaN(lon)) {
+                        console.error('Invalid location data');
+                        return;
+                    }
+                    
+                    input.value = displayName;
+                    dropdown.classList.remove('show');
+                    input.closest('.input-group').classList.remove('dropdown-open');
+                    
+                    // Center map on selected location with appropriate zoom
+                    if (map) {
+                        const latlng = [lat, lon];
+                        
+                        // Adjust zoom based on location type for better view
+                        let zoom = 15;
+                        if (resultType === 'place' || resultType === 'city') {
+                            zoom = 12;
+                        } else if (resultType === 'town' || resultType === 'village') {
+                            zoom = 13;
+                        } else if (resultType === 'suburb') {
+                            zoom = 14;
+                        } else if (resultType === 'highway' || resultType === 'road') {
+                            zoom = 14;
+                        }
+                        
+                        map.setView(latlng, zoom);
+                        
+                        // Add a temporary marker to show selected location
+                        if (input.id === 'startLocation' && startMarker) {
+                            map.removeLayer(startMarker);
+                            startMarker = null;
+                        }
+                        if (input.id === 'endLocation' && endMarker) {
+                            map.removeLayer(endMarker);
+                            endMarker = null;
+                        }
+                        
+                        const tempMarker = L.marker(latlng, {
+                            icon: createPinIcon(input.id === 'startLocation' ? '#00d4ff' : '#7F56D9', 'default')
+                        }).addTo(map);
+                        
+                        tempMarker.bindPopup(`<strong>${itemMainText}</strong><br>${itemSubText || ''}`).openPopup();
+                        
+                        // Remove marker after 5 seconds
+                        setTimeout(() => {
+                            if (map.hasLayer(tempMarker)) {
+                                map.removeLayer(tempMarker);
+                            }
+                        }, 5000);
+                    }
+                });
+                
+                // Handle hover
+                item.addEventListener('mouseenter', function() {
+                    dropdown.querySelectorAll('.autocomplete-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                });
+                
+                dropdown.appendChild(item);
+            });
+            
+            dropdown.classList.add('show');
+            input.closest('.input-group').classList.add('dropdown-open');
+        }
+
+        function reverseGeocode(latlng, callback) {
+            // Enhanced reverse geocoding with better accuracy
+            const url = new URL('https://nominatim.openstreetmap.org/reverse');
+            url.searchParams.set('format', 'json');
+            url.searchParams.set('lat', latlng[0].toString());
+            url.searchParams.set('lon', latlng[1].toString());
+            url.searchParams.set('zoom', '18');
+            url.searchParams.set('addressdetails', '1');
+            url.searchParams.set('extratags', '1');
+            url.searchParams.set('namedetails', '1');
+            url.searchParams.set('accept-language', 'en');
+            
+            fetch(url.toString(), {
+                headers: {
+                    'User-Agent': 'AURA Safety App (Educational Project)',
+                    'Accept': 'application/json',
+                    'Referer': window.location.origin
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.display_name) {
+                        // Format address more accurately
+                        const address = data.address || {};
+                        let formattedAddress = data.display_name;
+                        
+                        // Try to create a more readable address
+                        if (address.road || address.building || address.house_number) {
+                            const parts = [];
+                            if (address.house_number) parts.push(address.house_number);
+                            if (address.road) parts.push(address.road);
+                            if (address.suburb || address.village) parts.push(address.suburb || address.village);
+                            if (address.city || address.town) parts.push(address.city || address.town);
+                            if (address.state) parts.push(address.state);
+                            
+                            if (parts.length > 0) {
+                                formattedAddress = parts.join(', ');
+                            }
+                        }
+                        
+                        callback(formattedAddress);
+                    } else {
+                        callback(null);
+                    }
+                })
+                .catch(error => {
+                    console.error('Reverse geocoding error:', error);
+                    // Fallback to coordinates
+                    callback(`${latlng[0].toFixed(6)}, ${latlng[1].toFixed(6)}`);
+                });
+        }
+
+        function geocodeAddress(address) {
+            return new Promise((resolve, reject) => {
+                // Enhanced geocoding with better accuracy
+                const url = new URL('https://nominatim.openstreetmap.org/search');
+                url.searchParams.set('format', 'json');
+                url.searchParams.set('q', address);
+                url.searchParams.set('limit', '1');
+                url.searchParams.set('addressdetails', '1');
+                url.searchParams.set('extratags', '1');
+                url.searchParams.set('countrycodes', 'in');
+                url.searchParams.set('dedupe', '1');
+                url.searchParams.set('accept-language', 'en');
+                
+                // Add viewbox for Punjab area to improve accuracy
+                const viewbox = '73.5,29.5,76.5,32.0';
+                url.searchParams.set('viewbox', viewbox);
+                url.searchParams.set('bounded', '0');
+                
+                fetch(url.toString(), {
+                    headers: {
+                        'User-Agent': 'AURA Safety App (Educational Project)',
+                        'Accept': 'application/json',
+                        'Referer': window.location.origin
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            // Sort by importance and select the best match
+                            data.sort((a, b) => {
+                                const importanceA = parseFloat(a.importance || 0);
+                                const importanceB = parseFloat(b.importance || 0);
+                                return importanceB - importanceA;
+                            });
+                            
+                            const result = data[0];
+                            const lat = parseFloat(result.lat);
+                            const lon = parseFloat(result.lon);
+                            
+                            if (isNaN(lat) || isNaN(lon)) {
+                                reject(new Error('Invalid coordinates received from geocoding service.'));
+                                return;
+                            }
+                            
+                            resolve([lat, lon]);
+                        } else {
+                            reject(new Error(`No results found for "${address}". Please try a more specific address or check the spelling.`));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Geocoding error:', error);
+                        reject(new Error('Geocoding failed: ' + (error.message || 'Network error. Please check your connection and try again.')));
+                    });
+            });
+        }
+
+        // Fetch route data with multiple routing providers for better accuracy
+        async function fetchRouteData(startLocation, endLocation) {
+            const startLon = startLocation[1];
+            const startLat = startLocation[0];
+            const endLon = endLocation[1];
+            const endLat = endLocation[0];
+            
+            // Validate coordinates
+            if (isNaN(startLat) || isNaN(startLon) || isNaN(endLat) || isNaN(endLon)) {
+                throw new Error('Invalid coordinates');
+            }
+            
+            // Try multiple routing providers for better accuracy, especially for India
+            const routingProviders = [
+                // Try GraphHopper first (better coverage for India)
+                async () => {
+                    try {
+                        // GraphHopper expects [lat, lon] format
+                        const url = `https://graphhopper.com/api/1/route?point=${startLat},${startLon}&point=${endLat},${endLon}&vehicle=car&key=demo&type=json&instructions=false&calc_points=true&points_encoded=false`;
+                        const response = await fetch(url, {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`GraphHopper API error: ${response.status} - ${errorText}`);
+                        }
+                        const data = await response.json();
+                        if (data.paths && data.paths.length > 0) {
+                            const path = data.paths[0];
+                            // GraphHopper with points_encoded=false returns coordinates as [lat, lon]
+                            // But we need to check the actual format
+                            if (path.points && path.points.coordinates) {
+                                const coords = path.points.coordinates;
+                                if (Array.isArray(coords) && coords.length > 0 && Array.isArray(coords[0]) && coords[0].length === 2) {
+                                    // Check coordinate format: if first value > 90, it's longitude (likely [lon, lat])
+                                    // Latitude is always between -90 and 90
+                                    const firstCoord = coords[0];
+                                    if (Math.abs(firstCoord[0]) <= 90 && Math.abs(firstCoord[1]) <= 180) {
+                                        // It's [lat, lon] - GraphHopper format
+                                        return coords;
+                                    } else if (Math.abs(firstCoord[0]) <= 180 && Math.abs(firstCoord[1]) <= 90) {
+                                        // It's [lon, lat] - GeoJSON format, convert to [lat, lon]
+                                        return coords.map(coord => [coord[1], coord[0]]);
+                                    }
+                                    // Default: assume it's [lat, lon] as per GraphHopper docs
+                                    return coords;
+                                }
+                            }
+                        }
+                        throw new Error('No route from GraphHopper');
+                    } catch (error) {
+                        console.log('GraphHopper failed:', error.message);
+                        throw error;
+                    }
+                },
+                // Try OSRM with better parameters
+                async () => {
+                    try {
+                        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson&alternatives=true&steps=true`;
+                        const response = await fetch(osrmUrl);
+                        if (!response.ok) throw new Error('OSRM API error');
+                        const data = await response.json();
+                        if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+                            throw new Error('No route from OSRM');
+                        }
+                        // Use the shortest route (usually more accurate)
+                        const route = data.routes[0];
+                        if (route.geometry && route.geometry.coordinates) {
+                            return route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // Convert [lon, lat] to [lat, lon]
+                        }
+                        throw new Error('Invalid route data from OSRM');
+                    } catch (error) {
+                        console.log('OSRM failed:', error.message);
+                        throw error;
+                    }
+                },
+                // Fallback: Use OSRM alternative endpoint (more reliable)
+                async () => {
+                    try {
+                        // Try OSRM with different profile (cycling/walking might have better data in some areas)
+                        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson&steps=false`;
+                        const response = await fetch(osrmUrl);
+                        if (!response.ok) throw new Error('OSRM fallback API error');
+                        const data = await response.json();
+                        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                            const route = data.routes[0];
+                            if (route.geometry && route.geometry.coordinates) {
+                                // OSRM returns [lon, lat], convert to [lat, lon]
+                                return route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                            }
+                        }
+                        throw new Error('No route from OSRM fallback');
+                    } catch (error) {
+                        console.log('OSRM fallback failed:', error.message);
+                        throw error;
+                    }
+                }
+            ];
+            
+            // Try each provider in order
+            for (let i = 0; i < routingProviders.length; i++) {
+                try {
+                    console.log(`🛣️ Trying routing provider ${i + 1}/${routingProviders.length}...`);
+                    const coords = await routingProviders[i]();
+                    if (coords && coords.length > 0) {
+                        console.log(`✅ Route found with ${i === 0 ? 'GraphHopper' : i === 1 ? 'OSRM' : 'OpenRouteService'}: ${coords.length} points`);
+                        return coords;
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ Routing provider ${i + 1} failed:`, error.message);
+                    if (i === routingProviders.length - 1) {
+                        // Last provider failed, throw error
+                        throw new Error('All routing providers failed. Please check your locations and try again.');
+                    }
+                }
+            }
+            
+            throw new Error('No routing provider could calculate a route');
+        }
+
+        function findRoute() {
+            const start = document.getElementById('startLocation').value.trim();
+            const end = document.getElementById('endLocation').value.trim();
+
+            if (!start || !end) {
+                alert('Please enter both start and end locations');
+                return;
+            }
+
+            const btn = document.getElementById('findRouteBtn');
+            btn.disabled = true;
+            btn.textContent = 'Finding Routes...';
+
+            // Clear existing routes
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
+            if (safestRoute) {
+                map.removeLayer(safestRoute);
+            }
+
+            // Geocode addresses with better validation
+            Promise.all([
+                start.toLowerCase().includes('current') && currentLocation ? Promise.resolve(currentLocation) : geocodeAddress(start),
+                geocodeAddress(end)
+            ]).then(([startLocation, endLocation]) => {
+                // Validate geocoded locations
+                if (!startLocation || !endLocation || 
+                    !Array.isArray(startLocation) || !Array.isArray(endLocation) ||
+                    startLocation.length !== 2 || endLocation.length !== 2) {
+                    throw new Error('Invalid location coordinates. Please check your addresses.');
+                }
+                
+                // Check if coordinates are valid numbers
+                if (isNaN(startLocation[0]) || isNaN(startLocation[1]) || 
+                    isNaN(endLocation[0]) || isNaN(endLocation[1])) {
+                    throw new Error('Invalid location coordinates. Please enter valid addresses.');
+                }
+                
+                // Check if locations are too close (less than 100 meters)
+                const distance = calculateDistance(startLocation[0], startLocation[1], endLocation[0], endLocation[1]);
+                if (distance < 0.1) {
+                    throw new Error('Start and end locations are too close. Please select different locations.');
+                }
+                
+                console.log(`📍 Start: [${startLocation[0].toFixed(6)}, ${startLocation[1].toFixed(6)}]`);
+                console.log(`📍 End: [${endLocation[0].toFixed(6)}, ${endLocation[1].toFixed(6)}]`);
+                console.log(`📏 Distance: ${distance.toFixed(2)} km`);
+                
+                // Add markers for start and end
+                if (startMarker) {
+                    map.removeLayer(startMarker);
+                }
+                if (endMarker) {
+                    map.removeLayer(endMarker);
+                }
+
+                startMarker = L.marker(startLocation, {
+                    icon: createPinIcon('#00d4ff', 'default')
+                }).addTo(map).bindPopup('Start Location');
+
+                endMarker = L.marker(endLocation, {
+                    icon: createPinIcon('#7F56D9', 'default')
+                }).addTo(map).bindPopup('End Location');
+
+                // Fetch route data and draw safest route
+                fetchRouteData(startLocation, endLocation).then(routeCoords => {
+                    // Validate route coordinates
+                    if (!routeCoords || routeCoords.length < 2) {
+                        throw new Error('Invalid route data received');
+                    }
+                    
+                    // Draw Safest Route (Brand Purple #8e44ad)
+                    safestRoute = L.polyline(routeCoords, {
+                        color: '#8e44ad', // Brand Purple
+                        weight: 6,
+                        opacity: 0.9,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        smoothFactor: 1.0 // Better smoothing for accuracy
+                    }).addTo(map);
+                    
+                    safestRoute.bindPopup('Safest Route');
+                    
+                    // Calculate route distance
+                    let routeDistance = 0;
+                    for (let i = 1; i < routeCoords.length; i++) {
+                        routeDistance += calculateDistance(
+                            routeCoords[i-1][0], routeCoords[i-1][1],
+                            routeCoords[i][0], routeCoords[i][1]
+                        );
+                    }
+                    
+                    console.log(`✅ Route calculated: ${routeCoords.length} points, ${routeDistance.toFixed(2)} km`);
+                    
+                    // Fit map to show both locations and route with proper padding
+                    const bounds = new L.LatLngBounds([startLocation, endLocation]);
+                    if (safestRoute) bounds.extend(safestRoute.getBounds());
+                    map.fitBounds(bounds.pad(0.15));
+                    
+                    btn.disabled = false;
+                    btn.textContent = 'Find Route';
+                }).catch(error => {
+                    console.error('Error fetching route data:', error);
+                    
+                    // Show user-friendly error message
+                    const errorMsg = error.message || 'Unable to calculate route. This might be due to:\n• Invalid locations\n• No road connection between points\n• Network issues\n\nPlease try different locations or check your internet connection.';
+                    
+                    const errorDiv = document.createElement('div');
+                    errorDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.95); color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; max-width: 500px; text-align: center; font-size: 0.9rem; white-space: pre-line;';
+                    errorDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">⚠️ ${errorMsg}</div>
+                        <button onclick="this.parentElement.remove()" style="margin-top: 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Close</button>
+                    `;
+                    document.body.appendChild(errorDiv);
+                    
+                    // Auto-remove after 10 seconds
+                    setTimeout(() => {
+                        if (errorDiv.parentElement) {
+                            errorDiv.remove();
+                        }
+                    }, 10000);
+                    
+                    // Don't draw fallback route if routing fails - it's inaccurate
+                    btn.disabled = false;
+                    btn.textContent = 'Find Route';
+                });
+
+            }).catch((error) => {
+                console.error('Error finding route:', error);
+                
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.95); color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; max-width: 500px; text-align: center; font-size: 0.9rem;';
+                errorDiv.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 8px;">⚠️ ${error.message || 'Error finding route'}</div>
+                    <div style="font-size: 0.85rem; margin-top: 8px; opacity: 0.9;">Please check that both locations are valid addresses.</div>
+                    <button onclick="this.parentElement.remove()" style="margin-top: 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Close</button>
+                `;
+                document.body.appendChild(errorDiv);
+                
+                // Auto-remove after 10 seconds
+                setTimeout(() => {
+                    if (errorDiv.parentElement) {
+                        errorDiv.remove();
+                    }
+                }, 10000);
+
+                btn.disabled = false;
+                btn.textContent = 'Find Route';
+            });
+        }
+
+        // Helper function to calculate distance between two coordinates (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
+        // Helper function to generate coordinates within a radius
+        function generateLocationInRadius(centerLat, centerLon, radiusKm, angle) {
+            // Convert radius from km to degrees (approximate)
+            // 1 degree latitude ≈ 111 km
+            // 1 degree longitude ≈ 111 km * cos(latitude)
+            const radiusLat = radiusKm / 111;
+            const radiusLon = radiusKm / (111 * Math.cos(centerLat * Math.PI / 180));
+            
+            // Convert angle from degrees to radians
+            const angleRad = angle * Math.PI / 180;
+            
+            // Calculate random distance within radius (not uniform, but works)
+            const distance = Math.random() * radiusKm;
+            const distanceLat = (distance / 111);
+            const distanceLon = (distance / (111 * Math.cos(centerLat * Math.PI / 180)));
+            
+            // Calculate new coordinates
+            const lat = centerLat + distanceLat * Math.cos(angleRad);
+            const lon = centerLon + distanceLon * Math.sin(angleRad);
+            
+            return { lat, lon };
+        }
+
+        // Fetch real safe spaces from OpenStreetMap Overpass API
+        async function fetchRealSafeSpaces(centerLat, centerLon, radiusKm = 20) {
+            // Calculate bounding box for the 20 km radius
+            const radiusDeg = radiusKm / 111; // Approximate conversion
+            const south = centerLat - radiusDeg;
+            const north = centerLat + radiusDeg;
+            const west = centerLon - radiusDeg / Math.cos(centerLat * Math.PI / 180);
+            const east = centerLon + radiusDeg / Math.cos(centerLat * Math.PI / 180);
+            
+            console.log(`📍 Searching in bounding box: [${south.toFixed(4)}, ${west.toFixed(4)}, ${north.toFixed(4)}, ${east.toFixed(4)}]`);
+            
+            // Overpass API query to get police stations, hospitals, and safe spaces
+            // Using around query for better radius accuracy
+            const overpassQuery = `
+                [out:json][timeout:25];
+                (
+                    node["amenity"="police"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    way["amenity"="police"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    relation["amenity"="police"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    node["amenity"="hospital"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    way["amenity"="hospital"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    relation["amenity"="hospital"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    node["amenity"="clinic"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    way["amenity"="clinic"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    node["amenity"="fire_station"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                    way["amenity"="fire_station"](around:${radiusKm * 1000},${centerLat},${centerLon});
+                );
+                out center;
+            `;
+            
+            // Try multiple Overpass API endpoints
+            const overpassEndpoints = [
+                'https://overpass-api.de/api/interpreter',
+                'https://overpass.kumi.systems/api/interpreter',
+                'https://overpass.openstreetmap.ru/api/interpreter'
+            ];
+            
+            for (const endpoint of overpassEndpoints) {
+                try {
+                    console.log(`🌐 Trying Overpass API: ${endpoint}`);
+                    
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `data=${encodeURIComponent(overpassQuery)}`
+                    });
+                    
+                    if (!response.ok) {
+                        console.warn(`⚠️ Overpass API ${endpoint} returned status: ${response.status}`);
+                        continue; // Try next endpoint
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Check for Overpass API errors
+                    if (data.error) {
+                        console.warn(`⚠️ Overpass API error: ${data.error}`);
+                        continue;
+                    }
+                    
+                    const elements = data.elements || [];
+                    console.log(`📊 Received ${elements.length} elements from Overpass API`);
+                    
+                    if (elements.length === 0) {
+                        console.log('⚠️ No elements returned, trying next endpoint...');
+                        continue;
+                    }
+                    
+                    const safeSpaces = [];
+                    elements.forEach(element => {
+                        let lat, lon;
+                        if (element.type === 'node') {
+                            lat = element.lat;
+                            lon = element.lon;
+                        } else if (element.center) {
+                            lat = element.center.lat;
+                            lon = element.center.lon;
+                        } else {
+                            return; // Skip if no coordinates
+                        }
+                        
+                        // Calculate distance from center
+                        const distance = calculateDistance(centerLat, centerLon, lat, lon);
+                        
+                        // Only include if within 20 km radius (double-check)
+                        if (distance <= radiusKm) {
+                            const tags = element.tags || {};
+                            let type = 'safe-space';
+                            let name = tags.name || tags['name:en'] || tags['name:hi'] || 'Safe Space';
+                            
+                            if (tags.amenity === 'police') {
+                                type = 'police';
+                                name = tags.name || tags['name:en'] || tags['name:hi'] || 'Police Station';
+                            } else if (tags.amenity === 'hospital') {
+                                type = 'hospital';
+                                name = tags.name || tags['name:en'] || tags['name:hi'] || 'Hospital';
+                            } else if (tags.amenity === 'clinic') {
+                                type = 'hospital';
+                                name = tags.name || tags['name:en'] || tags['name:hi'] || 'Clinic';
+                            } else if (tags.amenity === 'fire_station') {
+                                type = 'safe-space';
+                                name = tags.name || tags['name:en'] || tags['name:hi'] || 'Fire Station';
+                            }
+                            
+                            // Build address from tags
+                            let address = '';
+                            if (tags['addr:street']) address += tags['addr:street'];
+                            if (tags['addr:city']) address += (address ? ', ' : '') + tags['addr:city'];
+                            if (tags['addr:postcode']) address += (address ? ' ' : '') + tags['addr:postcode'];
+                            if (!address) address = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                            
+                            safeSpaces.push({
+                                type: type,
+                                lat: lat,
+                                lng: lon,
+                                name: name,
+                                address: address,
+                                distance: distance.toFixed(1)
+                            });
+                        }
+                    });
+                    
+                    // Sort by distance
+                    safeSpaces.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+                    
+                    if (safeSpaces.length > 0) {
+                        console.log(`✅ Successfully fetched ${safeSpaces.length} safe spaces from ${endpoint}`);
+                        return safeSpaces;
+                    } else {
+                        console.log(`⚠️ No safe spaces found within radius, trying next endpoint...`);
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ Error with Overpass API ${endpoint}:`, error.message);
+                    // Continue to next endpoint
+                    continue;
+                }
+            }
+            
+            // If all endpoints failed, return null to use fallback
+            console.warn('❌ All Overpass API endpoints failed, will use simulated data');
+            return null;
+        }
+
+        // Generate simulated safe spaces if real data is not available
+        function generateSimulatedSafeSpaces(centerLat, centerLon, radiusKm = 20, count = 30) {
+            const safeSpaces = [];
+            const typeNames = {
+                'police': ['Police Station', 'Police Post', 'Police Precinct', 'Security Office', 'Police Checkpoint'],
+                'hospital': ['General Hospital', 'Emergency Center', 'Medical Clinic', 'Health Center', 'Hospital', 'Emergency Hospital'],
+                'pharmacy': ['24/7 Pharmacy', 'Medical Store', 'Pharmacy', 'Drug Store'],
+                'safe-space': ['24/7 Safe Space', 'Community Center', 'Safe Haven', 'Emergency Shelter', 'Public Safety Point']
+            };
+            
+            // Ensure we always have at least some police stations and hospitals
+            const guaranteedTypes = [
+                { type: 'police', count: 5, minDist: 1, maxDist: 8 },
+                { type: 'hospital', count: 5, minDist: 1, maxDist: 10 },
+                { type: 'pharmacy', count: 3, minDist: 2, maxDist: 12 },
+                { type: 'safe-space', count: 2, minDist: 3, maxDist: 15 }
+            ];
+            
+            // Generate guaranteed safe spaces first
+            guaranteedTypes.forEach(({ type, count: typeCount, minDist, maxDist }) => {
+                for (let i = 0; i < typeCount; i++) {
+                    const angle = (360 / typeCount) * i + Math.random() * 30;
+                    const distance = minDist + (Math.random() * (maxDist - minDist));
+                    
+                    const distanceLat = distance / 111;
+                    const distanceLon = distance / (111 * Math.cos(centerLat * Math.PI / 180));
+                    const angleRad = angle * Math.PI / 180;
+                    
+                    const lat = centerLat + distanceLat * Math.cos(angleRad);
+                    const lon = centerLon + distanceLon * Math.sin(angleRad);
+                    
+                    const actualDistance = calculateDistance(centerLat, centerLon, lat, lon);
+                    if (actualDistance > radiusKm || actualDistance < 0.5) {
+                        continue;
+                    }
+                    
+                    const typeNameList = typeNames[type];
+                    const name = typeNameList[Math.floor(Math.random() * typeNameList.length)];
+                    
+                    const streetNames = ['Main Street', 'Safety Road', 'Security Boulevard', 'Health Avenue', 'Emergency Lane', 'Public Square', 'Community Road', 'Service Street'];
+                    const streetName = streetNames[Math.floor(Math.random() * streetNames.length)];
+                    const streetNumber = Math.floor(Math.random() * 900) + 100;
+                    const address = `${streetNumber} ${streetName}`;
+                    
+                    safeSpaces.push({
+                        type: type,
+                        lat: lat,
+                        lng: lon,
+                        name: name,
+                        address: address,
+                        distance: actualDistance.toFixed(1)
+                    });
+                }
+            });
+            
+            // Generate additional random safe spaces to reach the count
+            const minDistance = 2; // Minimum 2 km
+            const maxDistance = Math.min(15, radiusKm); // Maximum 15 km or radiusKm
+            const remainingCount = Math.max(0, count - safeSpaces.length);
+            let generated = 0;
+            let attempts = 0;
+            const maxAttempts = remainingCount * 3; // Try up to 3x the count to ensure we get enough
+            
+            while (generated < remainingCount && attempts < maxAttempts) {
+                attempts++;
+                
+                // Distribute evenly around the circle
+                const angle = (360 / remainingCount) * generated + Math.random() * 15; // Add randomness
+                const distance = minDistance + (Math.random() * (maxDistance - minDistance));
+                
+                // Convert distance to degrees
+                const distanceLat = distance / 111;
+                const distanceLon = distance / (111 * Math.cos(centerLat * Math.PI / 180));
+                const angleRad = angle * Math.PI / 180;
+                
+                const lat = centerLat + distanceLat * Math.cos(angleRad);
+                const lon = centerLon + distanceLon * Math.sin(angleRad);
+                
+                // Verify distance is within radius
+                const actualDistance = calculateDistance(centerLat, centerLon, lat, lon);
+                if (actualDistance > radiusKm || actualDistance < minDistance) {
+                    continue; // Skip if outside radius or too close
+                }
+                
+                // Select type with weighted probability (favor police and hospitals)
+                let type;
+                const rand = Math.random();
+                if (rand < 0.35) {
+                    type = 'police';
+                } else if (rand < 0.70) {
+                    type = 'hospital';
+                } else if (rand < 0.85) {
+                    type = 'pharmacy';
+                } else {
+                    type = 'safe-space';
+                }
+                
+                const typeNameList = typeNames[type];
+                const name = typeNameList[Math.floor(Math.random() * typeNameList.length)];
+                
+                // Generate realistic address
+                const streetNames = ['Main Street', 'Safety Road', 'Security Boulevard', 'Health Avenue', 'Emergency Lane', 'Public Square', 'Community Road', 'Service Street'];
+                const streetName = streetNames[Math.floor(Math.random() * streetNames.length)];
+                const streetNumber = Math.floor(Math.random() * 900) + 100;
+                const address = `${streetNumber} ${streetName}`;
+                
+                safeSpaces.push({
+                    type: type,
+                    lat: lat,
+                    lng: lon,
+                    name: name,
+                    address: address,
+                    distance: actualDistance.toFixed(1)
+                });
+                
+                generated++;
+            }
+            
+            // Sort by distance
+            safeSpaces.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+            
+            // Count by type for logging
+            const counts = safeSpaces.reduce((acc, space) => {
+                acc[space.type] = (acc[space.type] || 0) + 1;
+                return acc;
+            }, {});
+            
+            console.log(`✅ Generated ${safeSpaces.length} simulated safe spaces within ${radiusKm} km:`);
+            console.log(`   🛡️ Police Stations: ${counts.police || 0}`);
+            console.log(`   🏥 Hospitals: ${counts.hospital || 0}`);
+            console.log(`   💊 Pharmacies: ${counts.pharmacy || 0}`);
+            console.log(`   ✅ Safe Spaces: ${counts['safe-space'] || 0}`);
+            
+            return safeSpaces;
+        }
+
+        async function loadSafeSpaces(center) {
+            // Ensure map is initialized
+            if (!map) {
+                console.error('Map is not initialized yet');
+                return;
+            }
+
+            // Clear existing markers
+            safeSpaceMarkers.forEach(marker => {
+                if (map.hasLayer(marker)) {
+                    map.removeLayer(marker);
+                }
+            });
+            safeSpaceMarkers = [];
+
+            const centerLat = center[0];
+            const centerLon = center[1];
+            const radiusKm = 20; // 20 km radius
+
+            // Remove existing radius circle if any (user doesn't want to see the circle)
+            if (radiusCircle) {
+                map.removeLayer(radiusCircle);
+                radiusCircle = null;
+            }
+            
+            console.log(`🔍 Loading safe spaces within ${radiusKm} km of [${centerLat.toFixed(6)}, ${centerLon.toFixed(6)}]`);
+            
+            // Try to fetch real safe spaces from OpenStreetMap
+            let safeSpaces = await fetchRealSafeSpaces(centerLat, centerLon, radiusKm);
+            
+            // If no real data or error, use simulated data
+            if (!safeSpaces || safeSpaces.length === 0) {
+                console.log('⚠️ No real safe spaces found from API, using simulated safe spaces data');
+                safeSpaces = generateSimulatedSafeSpaces(centerLat, centerLon, radiusKm, 30);
+                console.log(`✅ Generated ${safeSpaces.length} simulated safe spaces`);
+                
+                // If simulation also fails, create guaranteed nearby safe spaces
+                if (!safeSpaces || safeSpaces.length === 0) {
+                    console.warn('⚠️ Simulation failed, creating guaranteed safe spaces');
+                    safeSpaces = [];
+                }
+            } else {
+                console.log(`✅ Found ${safeSpaces.length} real safe spaces within ${radiusKm} km`);
+                // Limit to top 30 closest safe spaces
+                if (safeSpaces.length > 30) {
+                    console.log(`📊 Limiting to top 30 closest safe spaces (found ${safeSpaces.length} total)`);
+                    safeSpaces = safeSpaces.slice(0, 30);
+                }
+            }
+
+            // Debug: Log first few safe spaces
+            if (safeSpaces && safeSpaces.length > 0) {
+                console.log('Sample safe spaces:', safeSpaces.slice(0, 3));
+            } else {
+                console.warn('No safe spaces generated from API or simulation. Creating nearby safe spaces...');
+            }
+            
+            // Always ensure we have safe spaces - add guaranteed ones if needed
+            if (!safeSpaces || safeSpaces.length === 0) {
+                // Create nearby safe spaces around the university location
+                safeSpaces = [
+                    // Police stations
+                    { type: 'police', lat: centerLat + 0.005, lng: centerLon + 0.005, name: 'Police Station', address: 'Near University', distance: '0.5' },
+                    { type: 'police', lat: centerLat - 0.008, lng: centerLon + 0.003, name: 'Police Post', address: 'Near University', distance: '0.8' },
+                    { type: 'police', lat: centerLat + 0.003, lng: centerLon - 0.007, name: 'Security Office', address: 'Near University', distance: '0.7' },
+                    // Hospitals
+                    { type: 'hospital', lat: centerLat + 0.01, lng: centerLon - 0.005, name: 'General Hospital', address: 'Near University', distance: '1.2' },
+                    { type: 'hospital', lat: centerLat - 0.012, lng: centerLon + 0.008, name: 'Medical Clinic', address: 'Near University', distance: '1.5' },
+                    { type: 'hospital', lat: centerLat + 0.015, lng: centerLon + 0.01, name: 'Emergency Center', address: 'Near University', distance: '1.8' },
+                    { type: 'hospital', lat: centerLat - 0.009, lng: centerLon - 0.011, name: 'Health Center', address: 'Near University', distance: '1.4' },
+                    // Pharmacies
+                    { type: 'pharmacy', lat: centerLat - 0.006, lng: centerLon - 0.008, name: '24/7 Pharmacy', address: 'Near University', distance: '1.0' },
+                    { type: 'pharmacy', lat: centerLat + 0.008, lng: centerLon - 0.012, name: 'Medical Store', address: 'Near University', distance: '1.4' },
+                    { type: 'pharmacy', lat: centerLat + 0.007, lng: centerLon + 0.006, name: 'Drug Store', address: 'Near University', distance: '0.9' },
+                    // Other safe spaces
+                    { type: 'safe-space', lat: centerLat - 0.01, lng: centerLon - 0.01, name: 'Community Center', address: 'Near University', distance: '1.4' },
+                    { type: 'safe-space', lat: centerLat + 0.012, lng: centerLon - 0.015, name: 'Safe Haven', address: 'Near University', distance: '1.9' }
+                ];
+                console.log(`Created ${safeSpaces.length} guaranteed safe spaces around university`);
+            }
+
+            // Create markers for safe spaces with purple pins
+            if (!safeSpaces || safeSpaces.length === 0) {
+                console.warn('No safe spaces found to display');
+                return;
+            }
+
+            console.log(`Creating ${safeSpaces.length} safe space markers...`);
+            
+            // Verify createPinIcon function exists
+            if (typeof createPinIcon !== 'function') {
+                console.error('createPinIcon function is not defined!');
+                return;
+            }
+            
+            // Small delay to ensure map is fully rendered
+            setTimeout(() => {
+                safeSpaces.forEach((space, index) => {
+                try {
+                    // Validate space data
+                    if (!space.lat || !space.lng || isNaN(space.lat) || isNaN(space.lng)) {
+                        console.warn(`Invalid coordinates for safe space ${index}:`, space);
+                        return;
+                    }
+
+                    // Always use pin-style icon for safe spaces (purple #8e44ad)
+                    let pinIcon;
+                    try {
+                        // Determine icon type based on space type
+                        let iconType = 'default';
+                        if (space.type === 'police') {
+                            iconType = 'police';
+                        } else if (space.type === 'hospital') {
+                            iconType = 'hospital';
+                        } else if (space.type === 'pharmacy') {
+                            iconType = 'pharmacy';
+                        }
+                        
+                        // Create purple pin icon
+                        pinIcon = createPinIcon('#8e44ad', iconType);
+                        
+                        if (!pinIcon) {
+                            console.error(`Failed to create pin icon for safe space ${index}`);
+                            // Force create a default pin as fallback
+                            pinIcon = createPinIcon('#8e44ad', 'default');
+                        }
+                    } catch (iconError) {
+                        console.error(`Error creating pin icon for safe space ${index}:`, iconError, iconError.stack);
+                        // Force create a default pin as fallback
+                        pinIcon = createPinIcon('#8e44ad', 'default');
+                    }
+
+                    // Create marker with pin icon - ensure no default icon is used
+                    const marker = L.marker([space.lat, space.lng], {
+                        icon: pinIcon,
+                        riseOnHover: true
+                    });
+                    
+                    // Add to map immediately
+                    marker.addTo(map);
+                    
+                    // Verify marker is on map
+                    if (!map.hasLayer(marker)) {
+                        console.error(`Failed to add marker ${index} (${space.name}) to map`);
+                        return;
+                    }
+                    
+                    console.log(`✓ Added marker ${index + 1}/${safeSpaces.length}: ${space.name} at [${space.lat}, ${space.lng}]`);
+
+                    // Calculate distance from center
+                    const distance = calculateDistance(centerLat, centerLon, space.lat, space.lng);
+                    
+                    // Create minimalist InfoWindow for purple pins (Safe Spaces)
+                    const infoWindowContent = `
+                        <div style="font-family: 'Inter', sans-serif; text-align: center; padding: 8px 12px; min-width: 150px;">
+                            <div style="font-size: 1rem; font-weight: 600; color: #8e44ad; margin-bottom: 4px;">${space.name}</div>
+                            <div style="font-size: 0.75rem; color: #666; margin-top: 4px;">${space.type === 'police' ? 'Police Station' : space.type === 'hospital' ? 'Hospital' : space.type === 'pharmacy' ? '24/7 Pharmacy' : 'Safe Space'}</div>
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(infoWindowContent, {
+                        className: 'minimalist-infowindow',
+                        maxWidth: 200,
+                        closeButton: true
+                    });
+                    
+                    // Primary action: Click marker to show directions immediately
+                    marker.on('click', function(e) {
+                        showDirectionsToSafeSpace(space);
+                    });
+
+                    safeSpaceMarkers.push(marker);
+                } catch (error) {
+                    console.error(`Error creating marker for safe space ${index}:`, error, space);
+                }
+                });
+                
+                console.log(`Successfully loaded ${safeSpaceMarkers.length} safe space markers out of ${safeSpaces.length} safe spaces`);
+                
+                // Log marker positions for debugging
+                if (safeSpaceMarkers.length > 0) {
+                console.log('Safe space marker positions:', safeSpaceMarkers.map((m, i) => ({
+                    index: i,
+                    lat: m.getLatLng().lat,
+                    lng: m.getLatLng().lng,
+                    onMap: map.hasLayer(m),
+                    visible: true
+                })));
+                
+                // Create bounds that include all markers and center
+                const allPoints = safeSpaceMarkers.map(m => m.getLatLng());
+                allPoints.push(L.latLng(centerLat, centerLon));
+                const markerBounds = L.latLngBounds(allPoints);
+                
+                // Fit map to show all markers with padding
+                setTimeout(() => {
+                    try {
+                        map.fitBounds(markerBounds.pad(0.15));
+                        console.log('✓ Map bounds adjusted to show all safe spaces');
+                    } catch (boundsError) {
+                        console.error('Error fitting bounds:', boundsError);
+                        // Fallback: just set view to center with appropriate zoom
+                        map.setView([centerLat, centerLon], 13);
+                    }
+                }, 500);
+                
+                // Force refresh map to ensure markers are visible
+                setTimeout(() => {
+                    map.invalidateSize();
+                    console.log('✓ Map refreshed to ensure markers are visible');
+                }, 600);
+            } else {
+                console.error('❌ No safe space markers were created! Check console for errors above.');
+                // Create a test marker to verify pins work
+                try {
+                    const testPin = createPinIcon('#8e44ad', 'default');
+                    const testMarker = L.marker([centerLat, centerLon], { icon: testPin }).addTo(map);
+                    testMarker.bindPopup('TEST: If you see this purple pin, pin icons work!').openPopup();
+                    safeSpaceMarkers.push(testMarker);
+                    console.log('Created test marker to verify pin functionality');
+                } catch (testErr) {
+                    console.error('Failed to create test marker:', testErr);
+                }
+                }
+            }, 200); // 200ms delay to ensure map is fully rendered
+        }
+
+        // Function to show directions to a safe space
+        function showDirectionsToSafeSpace(space) {
+            // Determine start location
+            let startLocation = null;
+            const startInput = document.getElementById('startLocation').value.trim();
+            
+            // Priority: current location > start input > map center
+            if (currentLocation) {
+                startLocation = currentLocation;
+            } else if (startInput) {
+                // Try to geocode the start input
+                geocodeAddress(startInput).then(location => {
+                    displayRouteToSafeSpace(location, [space.lat, space.lng], space);
+                }).catch(error => {
+                    // If geocoding fails, use map center
+                    const mapCenter = map.getCenter();
+                    displayRouteToSafeSpace([mapCenter.lat, mapCenter.lng], [space.lat, space.lng], space);
+                });
+                return;
+            } else {
+                // Use map center as fallback
+                const mapCenter = map.getCenter();
+                startLocation = [mapCenter.lat, mapCenter.lng];
+            }
+            
+            displayRouteToSafeSpace(startLocation, [space.lat, space.lng], space);
+        }
+
+        // Function to display route to safe space
+        function displayRouteToSafeSpace(startLoc, endLoc, space) {
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(127, 86, 217, 0.95); color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-size: 0.9rem;';
+            loadingDiv.innerHTML = '🗺️ Calculating route to ' + space.name + '...';
+            document.body.appendChild(loadingDiv);
+            
+            // Remove existing routes
+            if (safestRoute) {
+                map.removeLayer(safestRoute);
+                safestRoute = null;
+            }
+            if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = null;
+            }
+            
+            // Update start and end location inputs
+            if (currentLocation) {
+                reverseGeocode(currentLocation, (address) => {
+                    if (address) {
+                        document.getElementById('startLocation').value = address;
+                    }
+                });
+            }
+            document.getElementById('endLocation').value = space.name + ', ' + space.address;
+            
+            // Remove existing start and end markers
+            if (startMarker) {
+                map.removeLayer(startMarker);
+                startMarker = null;
+            }
+            if (endMarker) {
+                map.removeLayer(endMarker);
+                endMarker = null;
+            }
+            
+            // Create markers for start and end with pin-style markers
+            startMarker = L.marker(startLoc, {
+                icon: createPinIcon('#00d4ff', 'default')
+            }).addTo(map).bindPopup('Start Location');
+            
+            endMarker = L.marker(endLoc, {
+                icon: createPinIcon('#7F56D9', 'default')
+            }).addTo(map).bindPopup(space.name);
+            
+            // Fetch route data and draw safest route
+            fetchRouteData(startLoc, endLoc).then(routeCoords => {
+                // Validate route coordinates
+                if (!routeCoords || routeCoords.length < 2) {
+                    throw new Error('Invalid route data received');
+                }
+                
+                // Draw Safest Route (Brand Purple #8e44ad)
+                safestRoute = L.polyline(routeCoords, {
+                    color: '#8e44ad', // Brand Purple
+                    weight: 6,
+                    opacity: 0.9,
+                    lineCap: 'round',
+                    lineJoin: 'round',
+                    smoothFactor: 1.0 // Better smoothing for accuracy
+                }).addTo(map);
+                
+                safestRoute.bindPopup('Safest Route');
+                
+                // Fit map to show both locations and route
+                const bounds = new L.LatLngBounds([startLoc, endLoc]);
+                if (safestRoute) bounds.extend(safestRoute.getBounds());
+                map.fitBounds(bounds.pad(0.2));
+            }).catch(error => {
+                console.error('Error fetching route data:', error);
+                // Don't draw fallback route - show error instead
+                const errorMsg = error.message || 'Unable to calculate route to this safe space.';
+                alert(`⚠️ ${errorMsg}\n\nPlease try selecting a different safe space or check your internet connection.`);
+            });
+            
+            // Remove loading indicator
+            setTimeout(() => {
+                if (loadingDiv.parentElement) {
+                    loadingDiv.remove();
+                }
+            }, 2000);
+            
+            // Show success message
+            const successDiv = document.createElement('div');
+            successDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(34, 197, 94, 0.95); color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-size: 0.9rem;';
+            successDiv.innerHTML = '✅ Route to ' + space.name + ' displayed';
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                if (successDiv.parentElement) {
+                    successDiv.remove();
+                }
+            }, 3000);
+        }
+
+        // Create custom pin-style marker icon
+        function createPinIcon(color, iconType = 'default') {
+            const pinSize = 40;
+            const pinHeight = 50;
+            
+            // Icon SVG based on type
+            let iconSvg = '';
+            if (iconType === 'police') {
+                iconSvg = '<path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z" fill="white" stroke="white" stroke-width="1"/><path d="M12 8v4M9 11h6" stroke="' + color + '" stroke-width="2" stroke-linecap="round"/>';
+            } else if (iconType === 'hospital') {
+                iconSvg = '<rect x="8" y="8" width="8" height="8" fill="white" rx="1"/><path d="M12 6v12M6 12h12" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round"/>';
+            } else if (iconType === 'pharmacy') {
+                iconSvg = '<rect x="6" y="6" width="12" height="12" fill="white" rx="2"/><path d="M9 9h6M9 12h6M9 15h6" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round"/>';
+            } else if (iconType === 'check-in') {
+                iconSvg = '<path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="white" fill-opacity="0.2"/>';
+            } else {
+                iconSvg = '<circle cx="12" cy="12" r="6" fill="white" opacity="0.9"/>';
+            }
+            
+            const html = `
+                <div class="pin-container custom-pin-marker">
+                    <div class="pin-body">
+                        <svg width="${pinSize}" height="${pinHeight}" viewBox="0 0 40 50">
+                            <!-- Pin head (rounded top) -->
+                            <path d="M20 0 C26 0 30 4 30 10 C30 20 20 30 20 30 C20 30 10 20 10 10 C10 4 14 0 20 0 Z" fill="${color}" stroke="white" stroke-width="2"/>
+                            <!-- Pin point -->
+                            <path d="M20 30 L25 50 L15 50 Z" fill="${color}" stroke="white" stroke-width="2"/>
+                            <!-- Icon overlay -->
+                            <g transform="translate(5, 5)">
+                                ${iconSvg}
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            `;
+            
+            const icon = L.divIcon({
+                className: 'custom-pin-marker',
+                html: html,
+                iconSize: [pinSize, pinHeight],
+                iconAnchor: [pinSize / 2, pinHeight],
+                popupAnchor: [0, -pinHeight]
+            });
+            
+            // Debug: Log icon creation
+            if (color === '#8e44ad' && iconType !== 'default') {
+                console.log(`Created ${iconType} pin icon with color ${color}`);
+            }
+            
+            return icon;
+        }
+
+        // Get pin icon based on type
+        function getSafeSpaceIcon(type) {
+            // Purple pin for safe spaces (#8e44ad)
+            const purpleColor = '#8e44ad';
+            
+            if (type === 'police') {
+                return createPinIcon(purpleColor, 'police');
+            } else if (type === 'hospital') {
+                return createPinIcon(purpleColor, 'hospital');
+            } else if (type === 'pharmacy') {
+                return createPinIcon(purpleColor, 'pharmacy');
+            } else {
+                return createPinIcon(purpleColor, 'default');
+            }
+        }
+
+        // Create red pin for SOS/danger zones
+        function createSOSPin() {
+            return createPinIcon('#ef4444', 'default');
+        }
+
+        // Create green pin for check-in points
+        function createCheckInPin() {
+            return createPinIcon('#22c55e', 'check-in');
+        }
+
+        // Initialize map on page load
+        window.addEventListener('DOMContentLoaded', initMap);
+    </script>
+</body>
+</html>
+

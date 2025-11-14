@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA • How AURA Protects You</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- NAV -->
+    <div class="nav" role="navigation" aria-label="Primary">
+        <div class="nav-inner">
+            <div class="brand" aria-label="AURA Home">
+                <div class="brand-badge" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3c3.5 2 7 2 10 0v7c0 5.2-3.2 9.9-8.1 11.6a2 2 0 0 1-1.8 0C6.2 19.9 3 15.2 3 10V3c3 2 6.5 2 9 0Z" stroke="white" opacity=".9" stroke-width="1.2"/>
+                    </svg>
+                </div>
+                <a href="#"><span class="brand-text"><span class="gradient">AURA</span> - Alert Understand Respond Assist</span></a>
+            </div>
+            <nav class="nav-links">
+                <a href="features.html" target="_blank">Features</a>
+                <a href="sos.html" target="_blank">SOS</a>
+                <a href="#route">Routes</a>
+                <a href="map.html" target="_blank" class="nav-map-btn" aria-label="Map">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" fill="white" opacity="1"/>
+                        <circle cx="12" cy="10" r="3" fill="#7F56D9" opacity="1"/>
+                    </svg>
+                </a>
+                <button id="settingsBtn" class="nav-settings-btn" aria-label="Settings">
+                    <span class="settings-emoji">⚙️</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container" id="features">
+        <!-- HERO -->
+        <section class="hero" aria-labelledby="hero-title">
+            <span class="eyebrow">Safety • Awareness • Navigation</span>
+            <h1 id="hero-title">How <span class="gradient">AURA</span> Protects You</h1>
+            <p class="subtitle">Discover how AURA keeps you safe 24/7. Follow these simple steps to set up emergency contacts, allow secure permissions, activate quick SOS, monitor live sound, and get the safest route to your destination.</p>
+        </section>
+
+        <!-- GRID: feature cards -->
+        <section class="grid" aria-label="Quick actions">
+            <!-- Add Contacts -->
+            <article class="card span-4" aria-labelledby="contacts-title">
+                <div class="card-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="white" opacity=".9" stroke-width="1.5"/>
+                        <path d="M4 20a8 8 0 1 1 16 0" stroke="white" opacity=".6" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <div class="card-head">
+                    <h3 id="contacts-title">Add Your Contacts</h3>
+                </div>
+                <p>Add trusted people so AURA can reach them instantly during emergencies. You control who gets notified.</p>
+                <a href="contacts.html" target="_blank" class="btn btn-primary" aria-label="Add emergency contacts">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 5v14M5 12h14" stroke="white" stroke-width="2"/>
+                    </svg>
+                    Add Contacts
+                </a>
+            </article>
+
+            <!-- Permissions -->
+            <article class="card span-4" aria-labelledby="perm-title">
+                <div class="card-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3l8 4v5c0 5-3.6 7.7-8 9-4.4-1.3-8-4-8-9V7l8-4Z" stroke="white" opacity=".9" stroke-width="1.5"/>
+                        <path d="M9 12l2 2 4-4" stroke="white" opacity=".8" stroke-width="1.8"/>
+                    </svg>
+                </div>
+                <div class="card-head">
+                    <h3 id="perm-title">Set Permissions</h3>
+                </div>
+                <p>Allow secure access to your <strong>location</strong> and <strong>microphone</strong> only when needed to enable AURA's core features.</p>
+                <a href="permissions.html" target="_blank" class="btn btn-info" aria-label="Open permission settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5 5l2.1 2.1M16.9 16.9L19 19M5 19l2.1-2.1M16.9 7.1L19 5" stroke="white" opacity=".9"/>
+                    </svg>
+                    Set Permission
+                </a>
+            </article>
+
+            <!-- SOS -->
+            <article class="card span-4 sos" id="sos" aria-labelledby="sos-title">
+                <div class="card-icon card-icon-sos" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> 
+                        <path d="M12 3l9 6-9 12L3 9l9-6Z" stroke="white" opacity=".9" stroke-width="1.5"/>
+                        <circle cx="12" cy="12" r="3.2" stroke="white" opacity=".8" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <div class="card-head">
+                    <h3 id="sos-title">Activate SOS Alert</h3>
+                </div>
+                <p>Long‑press the power button for 3 seconds to send your location and notify emergency contacts immediately.</p>
+                <a href="sos.html" target="_blank" class="btn btn-danger" aria-label="Activate SOS now">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 6h12v12H6z" stroke="white" stroke-width="1.6"/>
+                        <path d="M9 9h6v6H9z" fill="white"/>
+                    </svg>
+                    Activate
+                </a>
+            </article>
+
+            <!-- Fake Call -->
+            <article class="card span-6" aria-labelledby="fakecall-title">
+                <div class="card-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" opacity=".9" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <div class="card-head">
+                    <h3 id="fakecall-title">Fake Call</h3>
+                </div>
+                <p>Schedule a realistic-looking incoming call to give yourself an excuse to leave an uncomfortable situation or deter strangers.</p>
+                <button id="fakeCallBtn" class="btn btn-secondary" aria-label="Schedule call">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" stroke-width="1.5"/>
+                        <path d="M14 2v6h6" stroke="white" stroke-width="1.5"/>
+                        <path d="M16 13H8" stroke="white" stroke-width="1.5"/>
+                        <path d="M16 17H8" stroke="white" stroke-width="1.5"/>
+                        <path d="M10 9H8" stroke="white" stroke-width="1.5"/>
+                    </svg>
+                    Schedule Call
+                </button>
+            </article>
+
+            <!-- Safe Route -->
+            <article class="card span-6" id="route" aria-labelledby="route-title">
+                <div class="card-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z" stroke="white" opacity=".9" stroke-width="1.5"/>
+                        <circle cx="12" cy="10" r="2.5" stroke="white" opacity=".8" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <div class="card-head">
+                    <h3 id="route-title">Safe Route</h3>
+                </div>
+                <p>Find the safest route using live community and incident data to ensure your security.</p>
+                <a href="map.html?start=Lovely Professional University, Jalandhar, Punjab&end=31.332528,75.560278" target="_blank" class="btn btn-success" aria-label="Get the safest route">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12l4 4L19 6" stroke="white" stroke-width="2"/>
+                    </svg>
+                    Safe Route
+                </a>
+            </article>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <div class="footer-brand">
+                    <div class="brand-badge" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 3c3.5 2 7 2 10 0v7c0 5.2-3.2 9.9-8.1 11.6a2 2 0 0 1-1.8 0C6.2 19.9 3 15.2 3 10V3c3 2 6.5 2 9 0Z" stroke="white" opacity=".9" stroke-width="1.2"/>
+                        </svg>
+                    </div>
+                    <h3 class="footer-title">AURA</h3>
+                </div>
+                <p class="footer-description">Your Personal Safety Companion. Stay safe and secure with AI-powered emergency assistance, real-time location sharing, and instant SOS alerts.</p>
+            </div>
+
+            <div class="footer-column">
+                <h4 class="footer-heading">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="features.html" target="_blank">Features</a></li>
+                    <li><a href="#sos">SOS Alert</a></li>
+                    <li><a href="#route">Safe Route</a></li>
+                    <li><a href="contacts.html" target="_blank">Add Contacts</a></li>
+                    <li><a href="permissions.html" target="_blank">Set Permissions</a></li>
+                    <li><a href="map.html" target="_blank">Map</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4 class="footer-heading">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="/contact">Contact Us</a></li>
+                    <li><a href="/help">Help Center</a></li>
+                    <li><a href="/faq">FAQ</a></li>
+                    <li><a href="/tutorials">Tutorials</a></li>
+                    <li><a href="/safety-tips">Safety Tips</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4 class="footer-heading">Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="/privacy">Privacy Policy</a></li>
+                    <li><a href="/terms">Terms of Service</a></li>
+                    <li><a href="/cookies">Cookie Policy</a></li>
+                    <li><a href="/disclaimer">Safety Disclaimer</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p class="footer-copyright">&copy; 2025 AURA - Alert Understand Respond Assist. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="Facebook" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Twitter" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Instagram" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p><strong>Safety Disclaimer:</strong> AURA is designed to assist in emergency situations but cannot guarantee immediate response. Always contact local emergency services (911) in life-threatening situations. This app is a supplement to, not a replacement for, professional emergency services.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to top FAB -->
+    <button class="fab" aria-label="Scroll to top" title="Back to top" id="scrollTopBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" stroke="white" stroke-width="1.8"/>
+        </svg>
+    </button>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2>Website Settings</h2>
+                <button class="settings-close" id="closeSettings" aria-label="Close settings">&times;</button>
+            </div>
+            <div class="settings-modal-body">
+                <div class="settings-section">
+                    <h3>Appearance</h3>
+                    <div class="settings-item">
+                        <label for="themeToggle" class="settings-label settings-label-toggle">
+                            <span class="mode-label" data-translate="darkMode">Dark Mode</span>
+                            <span class="toggle-switch">
+                                <input type="checkbox" id="themeToggle" class="toggle-input">
+                                <span class="toggle-slider"></span>
+                            </span>
+                            <span class="mode-label" data-translate="lightMode">Light Mode</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Language</h3>
+                    <div class="settings-item">
+                        <label class="settings-label" data-translate="selectLanguage">Select Language</label>
+                        <div class="language-controls">
+                            <button id="prevLanguage" class="language-btn" aria-label="Previous language">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </button>
+                            <span id="languageDisplay" class="language-display">English</span>
+                            <button id="nextLanguage" class="language-btn" aria-label="Next language">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Accessibility</h3>
+                    <div class="settings-item">
+                        <label class="settings-label" data-translate="fontSize">Font Size</label>
+                        <div class="font-size-controls">
+                            <button id="decreaseFont" class="font-size-btn" aria-label="Decrease font size">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                                <span>A-</span>
+                            </button>
+                            <span id="fontSizeDisplay" class="font-size-display">100%</span>
+                            <button id="increaseFont" class="font-size-btn" aria-label="Increase font size">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                                <span>A+</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>SOS Settings</h3>
+                    <div class="settings-item sos-setting-item">
+                        <div class="setting-header">
+                            <label for="sosCountdownToggle" class="setting-title">
+                                <span data-translate="sosCountdown">3-Second Countdown</span>
+                            </label>
+                            <label for="sosCountdownToggle" class="toggle-wrapper">
+                                <span class="toggle-switch">
+                                    <input type="checkbox" id="sosCountdownToggle" class="toggle-input">
+                                    <span class="toggle-slider"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <p class="settings-description" data-translate="sosCountdownDesc">Enable a 3-second countdown to prevent accidental SOS activation. When disabled, SOS triggers instantly.</p>
+                    </div>
+                    <div class="settings-item sos-setting-item">
+                        <div class="setting-header">
+                            <label for="silentModeToggle" class="setting-title">
+                                <span data-translate="silentMode">Silent Mode</span>
+                            </label>
+                            <label for="silentModeToggle" class="toggle-wrapper">
+                                <span class="toggle-switch">
+                                    <input type="checkbox" id="silentModeToggle" class="toggle-input">
+                                    <span class="toggle-slider"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <p class="settings-description" data-translate="silentModeDesc">Send alerts without siren or flash (crucial for hiding).</p>
+                    </div>
+                    <div class="settings-item sos-setting-item" id="sirenVolumeContainer">
+                        <div class="setting-header">
+                            <label for="sirenVolume" class="setting-title">
+                                <span data-translate="sirenVolume">Siren Volume</span>
+                                <span class="setting-value" id="sirenVolumeDisplay">75%</span>
+                            </label>
+                        </div>
+                        <div class="volume-control-wrapper">
+                            <input type="range" id="sirenVolume" class="volume-slider" min="0" max="100" value="75" step="5">
+                        </div>
+                        <p class="settings-description" data-translate="sirenVolumeDesc">Adjust the volume of the alarm when Silent Mode is off.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fake Call Schedule Modal -->
+    <div id="fakeCallModal" class="fake-call-modal">
+        <div class="fake-call-modal-content">
+            <div class="fake-call-modal-header">
+                <h2>Fake Call</h2>
+                <button class="fake-call-close" id="closeFakeCallModal" aria-label="Close">&times;</button>
+            </div>
+            <div class="fake-call-modal-body">
+                <div class="fake-call-form-group">
+                    <label for="callerName">Caller Name</label>
+                    <input type="text" id="callerName" placeholder="e.g., Mom, Sarah, John" maxlength="30">
+                </div>
+                <div class="fake-call-form-group">
+                    <label for="callTime">Call in (minutes)</label>
+                    <input type="number" id="callTime" min="1" max="60" value="5" placeholder="5">
+                </div>
+                <div class="fake-call-form-group">
+                    <label for="callerNumber">Phone Number (optional)</label>
+                    <input type="text" id="callerNumber" placeholder="e.g., +1 (555) 123-4567" maxlength="20">
+                </div>
+                <div class="fake-call-actions">
+                    <button id="callNowBtn" class="btn btn-success">Call Now</button>
+                    <button id="scheduleCallBtn" class="btn btn-primary">Schedule Call</button>
+                    <button id="cancelScheduleBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incoming Call Screen -->
+    <div id="incomingCallScreen" class="incoming-call-screen">
+        <div class="call-screen-content">
+            <div class="caller-avatar">
+                <div class="avatar-circle">
+                    <span id="callerInitials">?</span>
+                </div>
+            </div>
+            <div class="caller-info">
+                <h2 id="callerNameDisplay">Unknown</h2>
+                <p id="callerNumberDisplay">Incoming call...</p>
+            </div>
+            <div class="call-actions">
+                <button id="declineCallBtn" class="call-btn decline-btn" aria-label="Decline call">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button id="answerCallBtn" class="call-btn answer-btn" aria-label="Answer call">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" stroke-width="2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>   
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Scroll to Top Button
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+        if (scrollTopBtn) {
+            scrollTopBtn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+        }
+
+        // Enhanced smooth scrolling for anchor links with visual feedback
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                // Skip empty anchors
+                if (href === '#' || href === '') return;
+                
+                const target = document.querySelector(href);
+                if (target) {
+                    e.preventDefault();
+                    const navHeight = document.querySelector('.nav')?.offsetHeight || 80;
+                    let targetPosition = target.offsetTop - navHeight;
+                    
+                    // If clicking Features and already at top, add visual highlight
+                    if (href === '#features') {
+                        // Add highlight effect to hero section
+                        const heroSection = target.querySelector('.hero');
+                        if (heroSection) {
+                            heroSection.style.transition = 'all 0.5s ease';
+                            heroSection.style.transform = 'scale(1.02)';
+                            heroSection.style.filter = 'brightness(1.1)';
+                            setTimeout(() => {
+                                heroSection.style.transform = '';
+                                heroSection.style.filter = '';
+                            }, 800);
+                        }
+                        
+                        // Flash the feature cards
+                        const featureCards = target.querySelectorAll('.card');
+                        featureCards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.style.transition = 'all 0.3s ease';
+                                card.style.transform = 'translateY(-8px)';
+                                card.style.boxShadow = '0 12px 40px rgba(127, 86, 217, 0.3)';
+                                setTimeout(() => {
+                                    card.style.transform = '';
+                                    card.style.boxShadow = '';
+                                }, 400);
+                            }, index * 100);
+                        });
+                    }
+                    
+                    // Smooth scroll to target
+                    window.scrollTo({
+                        top: Math.max(0, targetPosition),
+                        behavior: 'smooth'
+                    });
+                    
+                    // Update URL
+                    history.pushState(null, null, href);
+                }
+            });
+        });
+
+        // Register Service Worker for offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+
+</body>
+</html>

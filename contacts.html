@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AURA • Add Emergency Contacts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="contacts-page">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow" aria-label="AURA Full Form">AURA — Alert • Understand • Respond • Assist</span>
+      <h1>Add Emergency Contacts</h1>
+      <p class="subtitle">Please add up to <strong>3 trusted contacts</strong>. AURA will notify them and share your live location in case of emergency.</p>
+      <div class="stepper" aria-live="polite"><span class="dot"></span> Step 1 of 3 • Contacts</div>
+    </header>
+    <form class="sheet" id="contactForm" novalidate>
+      <!-- CONTACT 1 -->
+      <section class="section" aria-labelledby="c1">
+        <div class="section-title"><span class="bar"></span><span id="c1">Contact 1</span></div>
+        <div class="grid">
+          <div class="col-12">
+            <label for="name1">Name</label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 3-9 6v2h18v-2c0-3-4-6-9-6Z" fill="#cbd5e1"/>
+              </svg>
+              <input id="name1" name="name1" placeholder="Enter contact name" autocomplete="name" required />
+            </div>
+          </div>
+          <div class="col-6">
+            <label for="phone1">Phone Number</label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm6 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" fill="#cbd5e1"/>
+              </svg>
+              <input id="phone1" name="phone1" placeholder="Enter phone number" inputmode="tel" required />
+            </div>
+            <div class="help">Include country code if needed.</div>
+          </div>
+          <div class="col-6">
+            <label for="email1">Email <span style="color:var(--muted)">(Optional)</span></label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Zm2 0 7 5 7-5" fill="#cbd5e1"/>
+              </svg>
+              <input id="email1" name="email1" placeholder="Enter email address" inputmode="email" />
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="hr" role="presentation"></div>
+      <!-- CONTACT 2 -->
+      <section class="section" aria-labelledby="c2">
+        <div class="section-title"><span class="bar"></span><span id="c2">Contact 2</span></div>
+        <div class="grid">
+          <div class="col-12">
+            <label for="name2">Name</label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 3-9 6v2h18v-2c0-3-4-6-9-6Z" fill="#cbd5e1"/>
+              </svg>
+              <input id="name2" name="name2" placeholder="Enter contact name" autocomplete="off" />
+            </div>
+          </div>
+          <div class="col-6">
+            <label for="phone2">Phone Number</label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm6 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" fill="#cbd5e1"/>
+              </svg>
+              <input id="phone2" name="phone2" placeholder="Enter phone number" inputmode="tel" />
+            </div>
+          </div>
+          <div class="col-6">
+            <label for="email2">Email <span style="color:var(--muted)">(Optional)</span></label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Zm2 0 7 5 7-5" fill="#cbd5e1"/>
+              </svg>
+              <input id="email2" name="email2" placeholder="Enter email address" inputmode="email" />
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="hr" role="presentation"></div>
+      <!-- CONTACT 3 -->
+      <section class="section" aria-labelledby="c3">
+        <div class="section-title"><span class="bar"></span><span id="c3">Contact 3</span></div>
+        <div class="grid">
+          <div class="col-12">
+            <label for="name3">Name</label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 3-9 6v2h18v-2c0-3-4-6-9-6Z" fill="#cbd5e1"/>
+              </svg>
+              <input id="name3" name="name3" placeholder="Enter contact name" autocomplete="off" />
+            </div>
+          </div>
+          <div class="col-6">
+            <label for="phone3">Phone Number</label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm6 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" fill="#cbd5e1"/>
+              </svg>
+              <input id="phone3" name="phone3" placeholder="Enter phone number" inputmode="tel" />
+            </div>
+          </div>
+          <div class="col-6">
+            <label for="email3">Email <span style="color:var(--muted)">(Optional)</span></label>
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Zm2 0 7 5 7-5" fill="#cbd5e1"/>
+              </svg>
+              <input id="email3" name="email3" placeholder="Enter email address" inputmode="email" />
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="actions">
+        <a href="index.html" class="btn btn-ghost" aria-label="Back to Home">← Back to Home</a>
+        <button type="submit" class="btn btn-primary" id="saveBtn" aria-label="Save emergency contacts">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12l4 4L19 6" stroke="white" stroke-width="2"/>
+          </svg>
+          Save Emergency Contacts
+        </button>
+      </div>
+    </form>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 12l4 4L19 6" stroke="#22c55e" stroke-width="2"/>
+    </svg>
+    Contacts saved successfully.
+  </div>
+  <script>
+    const form = document.getElementById('contactForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const toast = document.getElementById('toast');
+
+    function validatePhone(v) {
+      return /^(\+?\d[\d\s-]{7,15})$/.test(v.trim());
+    }
+
+    function validateEmail(v) {
+      return v.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    }
+
+    // API base URL - adjust if your server is on a different port
+    const API_BASE_URL = window.location.origin;
+
+    // Load existing contacts on page load
+    async function loadContacts() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/contacts`);
+        const data = await response.json();
+        
+        if (data.success && data.contacts) {
+          const contacts = data.contacts;
+          
+          // Populate contact1
+          if (contacts.contact1) {
+            if (contacts.contact1.name) document.getElementById('name1').value = contacts.contact1.name;
+            if (contacts.contact1.phone) document.getElementById('phone1').value = contacts.contact1.phone;
+            if (contacts.contact1.email) document.getElementById('email1').value = contacts.contact1.email;
+          }
+          
+          // Populate contact2
+          if (contacts.contact2) {
+            if (contacts.contact2.name) document.getElementById('name2').value = contacts.contact2.name;
+            if (contacts.contact2.phone) document.getElementById('phone2').value = contacts.contact2.phone;
+            if (contacts.contact2.email) document.getElementById('email2').value = contacts.contact2.email;
+          }
+          
+          // Populate contact3
+          if (contacts.contact3) {
+            if (contacts.contact3.name) document.getElementById('name3').value = contacts.contact3.name;
+            if (contacts.contact3.phone) document.getElementById('phone3').value = contacts.contact3.phone;
+            if (contacts.contact3.email) document.getElementById('email3').value = contacts.contact3.email;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+        // If API fails, try to load from localStorage as fallback
+        const localContacts = JSON.parse(localStorage.getItem('aura_contacts') || '{}');
+        if (localContacts.contact1) {
+          if (localContacts.contact1.name) document.getElementById('name1').value = localContacts.contact1.name;
+          if (localContacts.contact1.phone) document.getElementById('phone1').value = localContacts.contact1.phone;
+          if (localContacts.contact1.email) document.getElementById('email1').value = localContacts.contact1.email;
+        }
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Basic validation for first contact (required)
+      const name1 = document.getElementById('name1');
+      const phone1 = document.getElementById('phone1');
+      const email1 = document.getElementById('email1');
+      const name2 = document.getElementById('name2');
+      const phone2 = document.getElementById('phone2');
+      const email2 = document.getElementById('email2');
+      const name3 = document.getElementById('name3');
+      const phone3 = document.getElementById('phone3');
+      const email3 = document.getElementById('email3');
+      
+      let ok = true;
+
+      [name1, phone1, email1].forEach(el => el.classList.remove('error'));
+
+      if (!name1.value.trim()) {
+        ok = false;
+        name1.classList.add('error');
+        name1.focus();
+      }
+      if (!validatePhone(phone1.value)) {
+        ok = false;
+        phone1.classList.add('error');
+        if (ok) phone1.focus();
+      }
+      if (!validateEmail(email1.value)) {
+        ok = false;
+        email1.classList.add('error');
+        if (ok) email1.focus();
+      }
+
+      // Validate contact2 if provided
+      if (name2.value.trim() || phone2.value.trim() || email2.value.trim()) {
+        if (!name2.value.trim() || !validatePhone(phone2.value)) {
+          ok = false;
+          if (!name2.value.trim()) name2.classList.add('error');
+          if (!validatePhone(phone2.value)) phone2.classList.add('error');
+        }
+        if (email2.value.trim() && !validateEmail(email2.value)) {
+          ok = false;
+          email2.classList.add('error');
+        }
+      }
+
+      // Validate contact3 if provided
+      if (name3.value.trim() || phone3.value.trim() || email3.value.trim()) {
+        if (!name3.value.trim() || !validatePhone(phone3.value)) {
+          ok = false;
+          if (!name3.value.trim()) name3.classList.add('error');
+          if (!validatePhone(phone3.value)) phone3.classList.add('error');
+        }
+        if (email3.value.trim() && !validateEmail(email3.value)) {
+          ok = false;
+          email3.classList.add('error');
+        }
+      }
+
+      if (!ok) {
+        saveBtn.disabled = false;
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = 0.8;
+      saveBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" stroke="white" stroke-width="2"/><circle cx="12" cy="12" r="1" fill="white"/></svg> Saving...';
+
+      // Prepare contacts data
+      const contactsData = {
+        contact1: {
+          name: name1.value.trim(),
+          phone: phone1.value.trim(),
+          email: email1.value.trim() || undefined
+        }
+      };
+
+      // Add contact2 if provided
+      if (name2.value.trim() && phone2.value.trim()) {
+        contactsData.contact2 = {
+          name: name2.value.trim(),
+          phone: phone2.value.trim(),
+          email: email2.value.trim() || undefined
+        };
+      }
+
+      // Add contact3 if provided
+      if (name3.value.trim() && phone3.value.trim()) {
+        contactsData.contact3 = {
+          name: name3.value.trim(),
+          phone: phone3.value.trim(),
+          email: email3.value.trim() || undefined
+        };
+      }
+
+      try {
+        // Save to API
+        const response = await fetch(`${API_BASE_URL}/api/contacts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(contactsData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Also save to localStorage as backup
+          localStorage.setItem('aura_contacts', JSON.stringify(data.contacts));
+          
+          saveBtn.disabled = false;
+          saveBtn.style.opacity = 1;
+          saveBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12l4 4L19 6" stroke="white" stroke-width="2"/></svg> Save Emergency Contacts';
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2400);
+          form.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          throw new Error(data.error || 'Failed to save contacts');
+        }
+      } catch (error) {
+        console.error('Error saving contacts:', error);
+        // Fallback to localStorage
+        localStorage.setItem('aura_contacts', JSON.stringify(contactsData));
+        
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = 1;
+        saveBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12l4 4L19 6" stroke="white" stroke-width="2"/></svg> Save Emergency Contacts';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2400);
+        form.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    // Load contacts on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadContacts();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AURA • Set Permissions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="permissions-page">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow" aria-label="AURA Full Form">AURA — Alert • Understand • Respond • Assist</span>
+      <h1>Set Permissions</h1>
+      <p class="subtitle">Grant AURA the necessary permissions to keep you safe. Enable <strong>location</strong>, <strong>microphone</strong>, and <strong>camera</strong> access for emergency alerts.</p>
+      <div class="stepper" aria-live="polite"><span class="dot"></span> Step 2 of 3 • Permissions</div>
+    </header>
+
+    <div class="sheet">
+      <div class="info-box">
+        <strong>Why we need these permissions:</strong><br>
+        AURA needs access to your camera, microphone, and location to send real-time alerts with your live location and audio to your emergency contacts when you need help.
+      </div>
+
+      <!-- Location Permission -->
+      <section class="permission-item" id="location-permission">
+        <div class="permission-header">
+          <h3>
+            <span class="permission-icon">📍</span>
+            Location Access
+          </h3>
+          <span class="permission-status" id="location-status">Checking...</span>
+        </div>
+        <p class="permission-description">
+          Allow AURA to access your location so it can share your live location with emergency contacts during an SOS alert.
+        </p>
+        <button class="btn btn-primary permission-button" onclick="requestLocationPermission()" id="location-btn">
+          Grant Location Permission
+        </button>
+      </section>
+
+      <!-- Microphone Permission -->
+      <section class="permission-item" id="microphone-permission">
+        <div class="permission-header">
+          <h3>
+            <span class="permission-icon">🎤</span>
+            Microphone Access
+          </h3>
+          <span class="permission-status" id="microphone-status">Checking...</span>
+        </div>
+        <p class="permission-description">
+          Allow AURA to access your microphone to record and share audio with your emergency contacts during an SOS alert.
+        </p>
+        <button class="btn btn-primary permission-button" onclick="requestMicrophonePermission()" id="microphone-btn">
+          Grant Microphone Permission
+        </button>
+      </section>
+
+      <!-- Camera Permission -->
+      <section class="permission-item" id="camera-permission">
+        <div class="permission-header">
+          <h3>
+            <span class="permission-icon">📷</span>
+            Camera Access
+          </h3>
+          <span class="permission-status" id="camera-status">Checking...</span>
+        </div>
+        <p class="permission-description">
+          Allow AURA to access your camera to capture and share photos/videos with your emergency contacts if needed.
+        </p>
+        <button class="btn btn-primary permission-button" onclick="requestCameraPermission()" id="camera-btn">
+          Grant Camera Permission
+        </button>
+      </section>
+
+      <div class="actions">
+        <a href="index.html" class="btn btn-ghost" aria-label="Back to Home">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div class="toast" id="toast-success" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 12l4 4L19 6" stroke="#22c55e" stroke-width="2"/>
+    </svg>
+    <span id="toast-success-text">Permission granted successfully.</span>
+  </div>
+
+  <div class="toast" id="toast-error" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 6L6 18M6 6l12 12" stroke="#ef4444" stroke-width="2"/>
+    </svg>
+    <span id="toast-error-text">Permission denied. Please enable it in your browser settings.</span>
+  </div>
+
+  <script>
+    const toastSuccess = document.getElementById('toast-success');
+    const toastError = document.getElementById('toast-error');
+    const toastSuccessText = document.getElementById('toast-success-text');
+    const toastErrorText = document.getElementById('toast-error-text');
+
+    function showToast(toast, message) {
+      if (toast === toastSuccess) {
+        toastSuccessText.textContent = message;
+      } else {
+        toastErrorText.textContent = message;
+      }
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Check permission status on page load
+    function checkPermissionStatus() {
+      // Check location permission
+      if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+          updatePermissionStatus('location', result.state);
+          result.onchange = function() {
+            updatePermissionStatus('location', result.state);
+          };
+        }).catch(function() {
+          updatePermissionStatus('location', 'prompt');
+        });
+
+        // Check microphone permission
+        navigator.permissions.query({ name: 'microphone' }).then(function(result) {
+          updatePermissionStatus('microphone', result.state);
+          result.onchange = function() {
+            updatePermissionStatus('microphone', result.state);
+          };
+        }).catch(function() {
+          updatePermissionStatus('microphone', 'prompt');
+        });
+
+        // Check camera permission
+        navigator.permissions.query({ name: 'camera' }).then(function(result) {
+          updatePermissionStatus('camera', result.state);
+          result.onchange = function() {
+            updatePermissionStatus('camera', result.state);
+          };
+        }).catch(function() {
+          updatePermissionStatus('camera', 'prompt');
+        });
+      } else {
+        // Fallback for browsers that don't support Permissions API
+        updatePermissionStatus('location', 'prompt');
+        updatePermissionStatus('microphone', 'prompt');
+        updatePermissionStatus('camera', 'prompt');
+      }
+    }
+
+    function updatePermissionStatus(permission, state) {
+      const statusElement = document.getElementById(permission + '-status');
+      const buttonElement = document.getElementById(permission + '-btn');
+      
+      if (state === 'granted') {
+        statusElement.textContent = 'Granted';
+        statusElement.className = 'permission-status granted';
+        if (buttonElement) {
+          buttonElement.disabled = true;
+          buttonElement.textContent = '✓ Permission Granted';
+        }
+      } else if (state === 'denied') {
+        statusElement.textContent = 'Denied';
+        statusElement.className = 'permission-status denied';
+        if (buttonElement) {
+          buttonElement.disabled = false;
+        }
+      } else {
+        statusElement.textContent = 'Not Set';
+        statusElement.className = 'permission-status prompt';
+        if (buttonElement) {
+          buttonElement.disabled = false;
+        }
+      }
+
+      // Save to localStorage
+      const permissions = JSON.parse(localStorage.getItem('aura_permissions') || '{}');
+      permissions[permission] = state;
+      localStorage.setItem('aura_permissions', JSON.stringify(permissions));
+    }
+
+    // Request location permission
+    function requestLocationPermission() {
+      const btn = document.getElementById('location-btn');
+      if (navigator.geolocation) {
+        btn.disabled = true;
+        btn.textContent = 'Requesting...';
+        
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            updatePermissionStatus('location', 'granted');
+            showToast(toastSuccess, 'Location permission granted!');
+            btn.disabled = true;
+            btn.innerHTML = '✓ Permission Granted';
+          },
+          function(error) {
+            btn.disabled = false;
+            btn.textContent = 'Grant Location Permission';
+            if (error.code === error.PERMISSION_DENIED) {
+              updatePermissionStatus('location', 'denied');
+              showToast(toastError, 'Location permission denied. Please enable it in your browser settings.');
+            } else {
+              updatePermissionStatus('location', 'prompt');
+              showToast(toastError, 'Could not access location: ' + error.message);
+            }
+          }
+        );
+      } else {
+        showToast(toastError, 'Geolocation is not supported by your browser.');
+      }
+    }
+
+    // Request microphone permission
+    function requestMicrophonePermission() {
+      const btn = document.getElementById('microphone-btn');
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        btn.disabled = true;
+        btn.textContent = 'Requesting...';
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(function(stream) {
+            updatePermissionStatus('microphone', 'granted');
+            // Stop the stream immediately as we just needed permission
+            stream.getTracks().forEach(track => track.stop());
+            showToast(toastSuccess, 'Microphone permission granted!');
+            btn.disabled = true;
+            btn.innerHTML = '✓ Permission Granted';
+          })
+          .catch(function(error) {
+            btn.disabled = false;
+            btn.textContent = 'Grant Microphone Permission';
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+              updatePermissionStatus('microphone', 'denied');
+              showToast(toastError, 'Microphone permission denied. Please enable it in your browser settings.');
+            } else {
+              updatePermissionStatus('microphone', 'prompt');
+              showToast(toastError, 'Could not access microphone: ' + error.message);
+            }
+          });
+      } else {
+        showToast(toastError, 'Microphone access is not supported by your browser.');
+      }
+    }
+
+    // Request camera permission
+    function requestCameraPermission() {
+      const btn = document.getElementById('camera-btn');
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        btn.disabled = true;
+        btn.textContent = 'Requesting...';
+        
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(stream) {
+            updatePermissionStatus('camera', 'granted');
+            // Stop the stream immediately as we just needed permission
+            stream.getTracks().forEach(track => track.stop());
+            showToast(toastSuccess, 'Camera permission granted!');
+            btn.disabled = true;
+            btn.innerHTML = '✓ Permission Granted';
+          })
+          .catch(function(error) {
+            btn.disabled = false;
+            btn.textContent = 'Grant Camera Permission';
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+              updatePermissionStatus('camera', 'denied');
+              showToast(toastError, 'Camera permission denied. Please enable it in your browser settings.');
+            } else {
+              updatePermissionStatus('camera', 'prompt');
+              showToast(toastError, 'Could not access camera: ' + error.message);
+            }
+          });
+      } else {
+        showToast(toastError, 'Camera access is not supported by your browser.');
+      }
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', checkPermissionStatus);
+  </script>
+</body>
+</html>

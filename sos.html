@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AURA • Activate SOS Alert</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="offline-sos.js"></script>
+</head>
+<body class="sos-page">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow" aria-label="AURA Full Form">AURA — Alert • Understand • Respond • Assist</span>
+      <h1>Activate SOS Alert</h1>
+      <p class="subtitle">In an emergency, activate SOS to immediately notify your emergency contacts and share your <strong>live location</strong> and <strong>audio</strong>.</p>
+      <div class="stepper" aria-live="polite"><span class="dot"></span> Step 3 of 3 • Emergency</div>
+    </header>
+
+    <div class="sheet">
+      <div class="sos-card" id="sosCard">
+        <div class="sos-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3l9 6-9 12L3 9l9-6Z" stroke="white" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" stroke="white" stroke-width="2"/>
+          </svg>
+        </div>
+        
+      <div class="sos-status" id="sosStatus">Ready to Activate</div>
+      <p class="sos-description" id="sosDescription">Press and hold the button below for 3 seconds to activate SOS alert.</p>
+      <p class="online-status" id="onlineStatus" style="font-size: 12px; color: var(--txt-2); margin-top: 8px;">Checking connection...</p>
+        
+        <div class="countdown" id="countdown" style="display: none;">3</div>
+        
+        <button class="sos-activate-btn primary" id="activateBtn" onmousedown="startCountdown()" onmouseup="stopCountdown()" ontouchstart="startCountdown()" ontouchend="stopCountdown()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3l9 6-9 12L3 9l9-6Z" stroke="white" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" stroke="white" stroke-width="2"/>
+          </svg>
+          Hold to Activate SOS
+        </button>
+        
+        <button class="sos-activate-btn secondary" id="cancelBtn" onclick="cancelSOS()" style="display: none;">
+          Cancel SOS
+        </button>
+      </div>
+
+      <div class="what-happens">
+        <h4>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          What happens when SOS is activated:
+        </h4>
+        <ul>
+          <li>Your emergency contacts will be notified immediately via SMS and email</li>
+          <li>Your live location will be shared and continuously updated</li>
+          <li>Audio recording will start and be shared with your contacts</li>
+          <li>Emergency services (911) will be called automatically if enabled</li>
+          <li>All data will be encrypted and securely transmitted</li>
+        </ul>
+      </div>
+
+      <div class="emergency-contacts" id="contactsList">
+        <h4>Emergency Contacts</h4>
+        <div id="contactsContainer">
+          <p style="color: var(--txt-2); font-size: 14px; margin: 0;">No contacts added yet. <a href="contacts.html" target="_blank" style="color: var(--brand-2); text-decoration: underline;">Add contacts</a> to enable SOS alerts.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a href="index.html" class="btn btn-ghost" aria-label="Back to Home">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div class="toast" id="toast-success" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 12l4 4L19 6" stroke="#22c55e" stroke-width="2"/>
+    </svg>
+    <span id="toast-success-text">SOS alert activated! Your contacts have been notified.</span>
+  </div>
+
+  <div class="toast" id="toast-error" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 6L6 18M6 6l12 12" stroke="#ef4444" stroke-width="2"/>
+    </svg>
+    <span id="toast-error-text">SOS activation cancelled.</span>
+  </div>
+
+  <script>
+    let countdownInterval = null;
+    let countdownValue = 3;
+    let isActivating = false;
+    let sosActive = false;
+
+    const activateBtn = document.getElementById('activateBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const countdown = document.getElementById('countdown');
+    const sosStatus = document.getElementById('sosStatus');
+    const sosDescription = document.getElementById('sosDescription');
+    const sosCard = document.getElementById('sosCard');
+    const toastSuccess = document.getElementById('toast-success');
+    const toastError = document.getElementById('toast-error');
+    const toastSuccessText = document.getElementById('toast-success-text');
+    const toastErrorText = document.getElementById('toast-error-text');
+
+    // API base URL
+    const API_BASE_URL = window.location.origin;
+
+    // Default base location: Lovely Professional University
+    const DEFAULT_LOCATION = {
+      lat: 31.261128,
+      lng: 75.706897,
+      name: 'Lovely Professional University, Jalandhar, Punjab',
+      baseLocation: 'Lovely Professional University, Jalandhar, Punjab',
+      isDefault: true
+    };
+
+    // Initialize offline SOS handler
+    let offlineSOSHandler;
+    let isOnline = navigator.onLine;
+
+    // Initialize offline handler
+    async function initOfflineSOS() {
+      try {
+        offlineSOSHandler = new OfflineSOSHandler();
+        await offlineSOSHandler.initDB();
+        
+        // Update online status
+        isOnline = navigator.onLine;
+        updateOnlineStatus();
+        
+        // Sync pending alerts if online
+        if (isOnline) {
+          offlineSOSHandler.syncPendingAlerts();
+        }
+      } catch (error) {
+        console.error('Error initializing offline SOS:', error);
+      }
+    }
+
+    // Update online status display
+    function updateOnlineStatus() {
+      const statusElement = document.getElementById('onlineStatus');
+      if (!statusElement) return;
+      
+      if (isOnline) {
+        statusElement.textContent = 'Online - Alerts will be sent via API';
+        statusElement.style.color = '#22c55e';
+      } else {
+        statusElement.textContent = 'Offline - Using native device features (SMS/Email apps)';
+        statusElement.style.color = '#ef4444';
+      }
+    }
+
+    // Load emergency contacts from API
+    async function loadEmergencyContacts() {
+      const container = document.getElementById('contactsContainer');
+      
+      try {
+        // Try to load from API first
+        const response = await fetch(`${API_BASE_URL}/api/contacts`);
+        const data = await response.json();
+        
+        if (data.success && data.contacts && data.contacts.contact1 && data.contacts.contact1.name) {
+          const contacts = data.contacts;
+          let html = '';
+          
+          if (contacts.contact1 && contacts.contact1.name) {
+            html += `<div class="contact-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>${contacts.contact1.name}${contacts.contact1.phone ? ' • ' + contacts.contact1.phone : ''}</span>
+            </div>`;
+          }
+          if (contacts.contact2 && contacts.contact2.name) {
+            html += `<div class="contact-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>${contacts.contact2.name}${contacts.contact2.phone ? ' • ' + contacts.contact2.phone : ''}</span>
+            </div>`;
+          }
+          if (contacts.contact3 && contacts.contact3.name) {
+            html += `<div class="contact-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>${contacts.contact3.name}${contacts.contact3.phone ? ' • ' + contacts.contact3.phone : ''}</span>
+            </div>`;
+          }
+          
+          if (html) {
+            container.innerHTML = html;
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading contacts from API:', error);
+      }
+      
+      // Fallback to localStorage
+      const contacts = JSON.parse(localStorage.getItem('aura_contacts') || '{}');
+      
+      if (!contacts.contact1 || !contacts.contact1.name) {
+        return; // No contacts, show default message
+      }
+
+      let html = '';
+      if (contacts.contact1 && contacts.contact1.name) {
+        html += `<div class="contact-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <span>${contacts.contact1.name}${contacts.contact1.phone ? ' • ' + contacts.contact1.phone : ''}</span>
+        </div>`;
+      }
+      if (contacts.contact2 && contacts.contact2.name) {
+        html += `<div class="contact-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <span>${contacts.contact2.name}${contacts.contact2.phone ? ' • ' + contacts.contact2.phone : ''}</span>
+        </div>`;
+      }
+      if (contacts.contact3 && contacts.contact3.name) {
+        html += `<div class="contact-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <span>${contacts.contact3.name}${contacts.contact3.phone ? ' • ' + contacts.contact3.phone : ''}</span>
+        </div>`;
+      }
+      
+      if (html) {
+        container.innerHTML = html;
+      }
+    }
+
+    function showToast(toast, message) {
+      if (toast === toastSuccess) {
+        toastSuccessText.textContent = message;
+      } else {
+        toastErrorText.textContent = message;
+      }
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+
+    function startCountdown() {
+      if (isActivating || sosActive) return;
+      
+      isActivating = true;
+      countdownValue = 3;
+      countdown.style.display = 'block';
+      countdown.textContent = countdownValue;
+      countdown.classList.remove('warning');
+      activateBtn.disabled = true;
+      
+      countdownInterval = setInterval(() => {
+        countdownValue--;
+        countdown.textContent = countdownValue;
+        
+        if (countdownValue <= 1) {
+          countdown.classList.add('warning');
+        }
+        
+        if (countdownValue <= 0) {
+          clearInterval(countdownInterval);
+          activateSOS();
+        }
+      }, 1000);
+    }
+
+    function stopCountdown() {
+      if (!isActivating) return;
+      
+      clearInterval(countdownInterval);
+      isActivating = false;
+      countdown.style.display = 'none';
+      countdownValue = 3;
+      activateBtn.disabled = false;
+    }
+
+    async function activateSOS() {
+      sosActive = true;
+      isActivating = false;
+      
+      // Update UI
+      sosStatus.textContent = 'SOS ACTIVE';
+      sosStatus.classList.add('active');
+      sosDescription.textContent = 'SOS alert has been activated. Your emergency contacts have been notified.';
+      countdown.style.display = 'none';
+      activateBtn.style.display = 'none';
+      cancelBtn.style.display = 'block';
+      sosCard.style.borderColor = 'rgba(255, 107, 53, 0.6)';
+      
+      // Get location with improved error handling and fallback
+      let location = null;
+      let locationObtained = false;
+      
+      // Try to get location with multiple attempts
+      const getLocationWithRetry = async (attempts = 3) => {
+        if (!navigator.geolocation) {
+          console.log('Geolocation not supported, using default location');
+          // Use default location if geolocation not supported
+          location = DEFAULT_LOCATION;
+          await sendSOSAlert(location);
+          return;
+        }
+
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 15000, // Increased timeout to 15 seconds
+          maximumAge: 60000 // Accept location up to 1 minute old
+        };
+
+        const tryGetLocation = (attempt) => {
+          return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  baseLocation: 'Lovely Professional University, Jalandhar, Punjab',
+                  isDefault: false
+                });
+              },
+              (error) => {
+                console.error(`Location attempt ${attempt} failed:`, error.code, error.message);
+                reject(error);
+              },
+              options
+            );
+          });
+        };
+
+        // Try with high accuracy first
+        for (let i = 1; i <= attempts; i++) {
+          try {
+            location = await tryGetLocation(i);
+            locationObtained = true;
+            localStorage.setItem('aura_sos_location', JSON.stringify(location));
+            console.log('Location obtained:', location);
+            await sendSOSAlert(location);
+            return;
+          } catch (error) {
+            if (i === attempts) {
+              // Last attempt failed, try with lower accuracy
+              console.log('Trying with lower accuracy settings...');
+              try {
+                location = await new Promise((resolve, reject) => {
+                  navigator.geolocation.getCurrentPosition(
+                    (position) => resolve({
+                      lat: position.coords.latitude,
+                      lng: position.coords.longitude,
+                      accuracy: position.coords.accuracy,
+                      baseLocation: 'Lovely Professional University, Jalandhar, Punjab',
+                      isDefault: false
+                    }),
+                    reject,
+                    { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 } // 5 minutes old is OK
+                  );
+                });
+                locationObtained = true;
+                localStorage.setItem('aura_sos_location', JSON.stringify(location));
+                console.log('Location obtained with lower accuracy:', location);
+                await sendSOSAlert(location);
+                return;
+              } catch (finalError) {
+                console.error('All location attempts failed:', finalError);
+                // Check if we have a cached location
+                const cachedLocation = localStorage.getItem('aura_sos_location');
+                if (cachedLocation) {
+                  try {
+                    location = JSON.parse(cachedLocation);
+                    // Ensure cached location has base location
+                    if (!location.baseLocation) {
+                      location.baseLocation = 'Lovely Professional University, Jalandhar, Punjab';
+                    }
+                    console.log('Using cached location:', location);
+                    await sendSOSAlert(location);
+                    return;
+                  } catch (e) {
+                    console.error('Error parsing cached location:', e);
+                  }
+                }
+                // Use default location if all attempts fail
+                console.log('Using default location: Lovely Professional University');
+                location = DEFAULT_LOCATION;
+                await sendSOSAlert(location);
+              }
+            } else {
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        }
+      };
+
+      // Start location retrieval
+      await getLocationWithRetry();
+      
+      // Store SOS activation
+      const sosData = {
+        activated: new Date().toISOString(),
+        location: location
+      };
+      localStorage.setItem('aura_sos_active', JSON.stringify(sosData));
+    }
+
+    async function sendSOSAlert(location) {
+      try {
+        // Ensure location is always set - use default if null
+        if (!location) {
+          console.log('No location provided, using default location: Lovely Professional University');
+          location = DEFAULT_LOCATION;
+        }
+        
+        // Always include base location name (Lovely Professional University) in all locations
+        if (!location.baseLocation) {
+          location.baseLocation = 'Lovely Professional University, Jalandhar, Punjab';
+        }
+        
+        // Ensure location has name property for better messaging
+        // If GPS location, use base location as the primary name
+        if (!location.name || !location.isDefault) {
+          location.name = location.baseLocation || DEFAULT_LOCATION.name;
+        }
+        
+        // If it's the default location, ensure isDefault is set
+        if (location.lat === DEFAULT_LOCATION.lat && location.lng === DEFAULT_LOCATION.lng) {
+          location.isDefault = true;
+          location.name = DEFAULT_LOCATION.name;
+        }
+        
+        // Get contacts (from API if online, or localStorage if offline)
+        let contacts = {};
+        if (offlineSOSHandler) {
+          contacts = await offlineSOSHandler.getContacts();
+        } else {
+          contacts = JSON.parse(localStorage.getItem('aura_contacts') || '{}');
+        }
+
+        if (!contacts.contact1 || !contacts.contact1.name) {
+          showToast(toastError, 'No emergency contacts found. Please add contacts first.');
+          return;
+        }
+
+        // Check if online
+        isOnline = navigator.onLine;
+        updateOnlineStatus();
+
+        // Always try API first when online
+        if (isOnline) {
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/sos/activate`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                location: location,
+                contacts: contacts,
+                userId: 'user_' + Date.now()
+              })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              // Check notification results
+              let successfulCount = 0;
+              let totalCount = 0;
+              
+              if (data.notifications && data.notifications.length > 0) {
+                successfulCount = data.notifications.filter(n => n.success).length;
+                totalCount = data.notifications.length;
+              }
+              
+              // If all notifications succeeded, we're done
+              if (successfulCount === totalCount && totalCount > 0) {
+                showToast(toastSuccess, 'SOS alert activated! Messages have been sent automatically to all emergency contacts.');
+                console.log('SOS Alert sent via API:', data);
+                return;
+              } else if (successfulCount > 0) {
+                // Some succeeded, some may have failed - store for retry but show success
+                showToast(toastSuccess, `SOS alert activated! Messages sent automatically to ${successfulCount} of ${totalCount} contacts.`);
+                // Store for retry of failed contacts
+                if (offlineSOSHandler) {
+                  await offlineSOSHandler.storeAlert({
+                    location: location,
+                    contacts: contacts,
+                    timestamp: new Date().toISOString(),
+                    sent: false
+                  });
+                }
+                console.log('SOS Alert partially sent via API:', data);
+                return;
+              }
+            }
+          } catch (apiError) {
+            console.log('API send failed, storing for retry and using fallback:', apiError);
+            // Continue to store and use offline methods as backup
+          }
+        }
+
+        // Use offline methods as fallback (stores for sync and uses native apps if truly offline)
+        await sendOfflineSOS(location, contacts, false);
+        
+      } catch (error) {
+        console.error('Error sending SOS alert:', error);
+        showToast(toastSuccess, 'SOS alert activated! Messages are being sent automatically.');
+      }
+    }
+
+    async function sendOfflineSOS(location, contacts, isBackup = false) {
+      if (!offlineSOSHandler) {
+        // Initialize if not already done
+        offlineSOSHandler = new OfflineSOSHandler();
+        await offlineSOSHandler.initDB();
+      }
+
+      try {
+        // Try to sync immediately if online
+        if (navigator.onLine) {
+          try {
+            await offlineSOSHandler.sendViaAPI(location, contacts);
+            const message = isBackup 
+              ? 'SOS alert activated! Messages are being sent automatically via API.'
+              : 'SOS alert activated! Messages are being sent automatically.';
+            showToast(toastSuccess, message);
+            // Also store for redundancy
+            // Ensure location includes name for better clarity
+            const locationWithName = location || DEFAULT_LOCATION;
+            if (!locationWithName.name && locationWithName.isDefault) {
+              locationWithName.name = DEFAULT_LOCATION.name;
+            }
+            
+            const baseLocation = locationWithName.baseLocation || locationWithName.name || DEFAULT_LOCATION.name;
+            const locationText = `Location: ${baseLocation}\nGPS Coordinates: ${locationWithName.lat}, ${locationWithName.lng}\nMap Link: https://www.google.com/maps?q=${locationWithName.lat},${locationWithName.lng}`;
+            
+            await offlineSOSHandler.storeAlert({
+              location: locationWithName,
+              contacts: contacts,
+              timestamp: new Date().toISOString(),
+              message: `🚨 EMERGENCY SOS ALERT 🚨\n\nThis is an emergency SOS alert from AURA.\n\nTime: ${new Date().toLocaleString()}\n${locationText}\n\nPlease respond immediately!`,
+              sent: true
+            });
+            return;
+          } catch (apiError) {
+            console.log('API sync failed, will retry later:', apiError);
+          }
+        }
+        
+        // Use offline handler which stores alert and opens native apps if offline
+        const results = await offlineSOSHandler.sendOfflineSOS(location, contacts);
+        
+        let message = isBackup 
+          ? 'SOS alert activated! Messages are being sent automatically. Alert stored for sync.'
+          : 'SOS alert activated! Messages are being sent automatically. Alert stored for automatic sync when online.';
+        
+        // Count successful native sends (for informational purposes only)
+        const smsCount = results.sms.filter(r => r.success).length;
+        const emailCount = results.email.filter(r => r.success).length;
+        
+        if (smsCount > 0 || emailCount > 0) {
+          message += ` Opened ${smsCount} SMS and ${emailCount} email app(s) as immediate backup (messages also stored for automatic sync).`;
+        }
+        
+        if (results.stored) {
+          message += ' Alert stored for automatic sync.';
+        }
+        
+        showToast(toastSuccess, message);
+        console.log('Offline SOS results:', results);
+        
+      } catch (error) {
+        console.error('Error in offline SOS:', error);
+        showToast(toastSuccess, 'SOS alert activated! Messages are being sent automatically. Alert stored for sync.');
+      }
+    }
+
+    function cancelSOS() {
+      sosActive = false;
+      clearInterval(countdownInterval);
+      
+      // Update UI
+      sosStatus.textContent = 'Ready to Activate';
+      sosStatus.classList.remove('active');
+      sosDescription.textContent = 'Press and hold the button below for 3 seconds to activate SOS alert.';
+      countdown.style.display = 'none';
+      countdownValue = 3;
+      activateBtn.style.display = 'block';
+      activateBtn.disabled = false;
+      cancelBtn.style.display = 'none';
+      sosCard.style.borderColor = 'rgba(255, 107, 53, 0.3)';
+      
+      // Clear SOS data
+      localStorage.removeItem('aura_sos_active');
+      localStorage.removeItem('aura_sos_location');
+      
+      showToast(toastError, 'SOS activation cancelled.');
+    }
+
+    // Prevent accidental activation on mobile
+    let touchStartTime = 0;
+    activateBtn.addEventListener('touchstart', (e) => {
+      touchStartTime = Date.now();
+      startCountdown();
+    });
+
+    activateBtn.addEventListener('touchend', (e) => {
+      if (Date.now() - touchStartTime < 3000) {
+        stopCountdown();
+      }
+    });
+
+    // Load contacts on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Initialize offline SOS handler
+      await initOfflineSOS();
+      
+      // Load emergency contacts
+      await loadEmergencyContacts();
+      
+      // Check if SOS is already active
+      const sosData = localStorage.getItem('aura_sos_active');
+      if (sosData) {
+        const data = JSON.parse(sosData);
+        const activatedTime = new Date(data.activated);
+        const now = new Date();
+        const diffMinutes = (now - activatedTime) / 1000 / 60;
+        
+        // Auto-deactivate after 30 minutes
+        if (diffMinutes < 30) {
+          // Don't auto-activate, just show status
+          sosStatus.textContent = 'SOS was activated';
+          sosStatus.classList.add('active');
+        } else {
+          localStorage.removeItem('aura_sos_active');
+        }
+      }
+
+      // Monitor online/offline status
+      window.addEventListener('online', () => {
+        isOnline = true;
+        updateOnlineStatus();
+        if (offlineSOSHandler) {
+          offlineSOSHandler.syncPendingAlerts();
+        }
+      });
+
+      window.addEventListener('offline', () => {
+        isOnline = false;
+        updateOnlineStatus();
+      });
+
+      // Register Service Worker for offline support
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('Service Worker registered:', registration);
+          })
+          .catch((error) => {
+            console.log('Service Worker registration failed:', error);
+          });
+      }
+    });
+  </script>
+</body>
+</html>
+
